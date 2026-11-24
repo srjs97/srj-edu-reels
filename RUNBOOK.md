@@ -71,8 +71,8 @@ bonus, fun fact, outro.
 **Buffer limits** (free plan): at most **10 scheduled posts in the whole org at a time**, and at most 2 YouTube posts per day.
 Other SRJ EDU work (PSC quiz posts) shares the same Buffer, so before step 7 count the org's `scheduled` posts
 (list_posts, status scheduled). The reel needs 3 free slots. If fewer are free, schedule in this order until full:
-Instagram, YouTube, Facebook. Never delete or move other posts to make room. Write what was scheduled in column F,
-e.g. `Scheduled YYYY-MM-DD (IG+YT; FB skipped: Buffer 10-post limit)`, and say so clearly in the report so
+**YouTube first** (Suraj: YouTube carries only these reels), then Instagram, then Facebook. Never delete or move other posts to make room. Write what was scheduled in column F,
+e.g. `Scheduled YYYY-MM-DD (YT+IG; FB skipped: Buffer 10-post limit)`, and say so clearly in the report so
 Suraj can add the rest by hand.
 
 Never post with `shareNow`. Never schedule more than one day ahead (the free plan holds only 10 posts).
