@@ -66,4 +66,8 @@ bonus, fun fact, outro.
 7. **Record**: write `Scheduled YYYY-MM-DD` into column F of the row.
 8. **Report**: if any step fails, stop, leave column F empty, and say exactly which step failed and why.
 
+**YouTube limit**: Buffer allows only 2 YouTube posts per day, and other SRJ EDU content (PSC quiz shorts) may already use them.
+If the YouTube post is refused for that reason, still schedule Instagram and Facebook, write
+`Scheduled YYYY-MM-DD (IG+FB; YouTube skipped: daily limit)` in column F, and say so in the report.
+
 Never post with `shareNow`. Never schedule more than one day ahead (the free plan holds only 10 posts).
