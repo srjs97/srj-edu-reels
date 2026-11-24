@@ -25,9 +25,11 @@ bonus, fun fact, outro.
 
 1. **Setup**: `apt-get install -y fonts-smc-manjari fonts-noto-core` (Manjari Bold font; PIL needs raqm, which is present).
    Clone this repo.
-2. **Pick the topic**: read `A4:F1196`. The topic is the first row whose column F is empty. Skip a row only if
+2. **Already done today?** If any row's column F already starts with `Scheduled <today's date>`, stop: today's reel
+   is already scheduled. Report that and do nothing else.
+3. **Pick the topic**: read `A4:F1196`. The topic is the first row whose column F is empty. Skip a row only if
    `specs/NNN.json` already exists *and* Buffer already has its posts (then just fill column F).
-3. **Write the spec** `specs/NNN.json` (NNN = Topic # zero-padded to 3). Copy the shape of `specs/002.json`
+4. **Write the spec** `specs/NNN.json` (NNN = Topic # zero-padded to 3). Copy the shape of `specs/002.json`
    exactly. Rules:
    - `topicNo` = Topic #, `tag` = `THIS vs THAT #<Topic #>`.
    - All text natural, simple Malayalam that a school student understands. Keep each line short
@@ -43,12 +45,12 @@ bonus, fun fact, outro.
      `{"emojis": [5 emojis for the category], "top": [r,g,b], "bottom": [r,g,b]}` with a dark top colour
      tinted to the category (e.g. green-dark for nature, teal-dark for chemistry, red-dark for medicine)
      and a near-black bottom.
-4. **Render**: `renderer/make_reel.sh specs/NNN.json reels/NNN.mp4` (about 2.5 min). Then check it:
+5. **Render**: `renderer/make_reel.sh specs/NNN.json reels/NNN.mp4` (about 2.5 min). Then check it:
    extract frames at 3.5, 7.5, 12, 22, 31, 39, 49, 55, 59 s with ffmpeg and look at them. Fix any text that
    overflows, overlaps or shows boxes instead of letters, and render again.
-5. **Publish the file**: commit `specs/NNN.json` and `reels/NNN.mp4`, push to `main`. Confirm
+6. **Publish the file**: commit `specs/NNN.json` and `reels/NNN.mp4`, push to `main`. Confirm
    `curl -sI <raw URL>` returns 200 with `content-length` > 1,000,000.
-6. **Schedule on Buffer**, `mode: customScheduled`, `schedulingType: automatic`,
+7. **Schedule on Buffer**, `mode: customScheduled`, `schedulingType: automatic`,
    `dueAt: <today>T18:30:00+05:30`, asset `{ video: { url: <raw URL> } }`:
    - Instagram: `metadata.instagram = { type: "reel", shouldShareToFeed: true }`
    - Facebook: `metadata.facebook = { type: "reel" }`
@@ -63,8 +65,8 @@ bonus, fun fact, outro.
      Follow @srj_edu_app for daily This vs That 🔥
      #srjedu #malayalam #thisvsthat #<thingA no spaces> #<thingB no spaces> #<category tag> #science #education #learnmalayalam #reels
      ```
-7. **Record**: write `Scheduled YYYY-MM-DD` into column F of the row.
-8. **Report**: if any step fails, stop, leave column F empty, and say exactly which step failed and why.
+8. **Record**: write `Scheduled YYYY-MM-DD` into column F of the row.
+9. **Report**: if any step fails, stop, leave column F empty, and say exactly which step failed and why.
 
 **YouTube limit**: Buffer allows only 2 YouTube posts per day, and other SRJ EDU content (PSC quiz shorts) may already use them.
 If the YouTube post is refused for that reason, still schedule Instagram and Facebook, write
