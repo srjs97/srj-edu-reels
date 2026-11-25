@@ -40,7 +40,9 @@ bonus, fun fact, outro.
    - `quiz.correct` is `"A"` or `"B"`; `quiz.answer` is that thing's English name in caps with `!`.
    - `outro3` names the next row's topic: `അടുത്തത്: <Thing A> vs <Thing B>`.
    - `emojiA` / `emojiB`: one emoji each that pictures the thing (used as the big illustration).
-   - `colA` / `colB`: two contrasting bright colours.
+   - `"light": true` always (Suraj chose a light yellow background, 2026-11-25). Text colours are
+     converted automatically; keep using the normal white/yellow/grey values from the example.
+   - `colA` / `colB`: two contrasting bright colours (they are darkened automatically for the light background).
    - `theme`: `"space"` for category `Astronomy & Space`. For every other category use
      `{"emojis": [5 emojis for the category], "top": [r,g,b], "bottom": [r,g,b]}` with a dark top colour
      tinted to the category (e.g. green-dark for nature, teal-dark for chemistry, red-dark for medicine)

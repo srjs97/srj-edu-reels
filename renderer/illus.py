@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 W, H = 1080, 1920
+LIGHT_MODE = False
 
 
 def _smooth_noise(n, scale, seed):
@@ -77,15 +78,15 @@ def mottled(c1, c2, scale=8, seed=2, craters=0):
 
 
 def earth_fn(x, y, lat, lon, n):
-    land = _smooth_noise(n, 9, 21) * 0.6 + _smooth_noise(n, 30, 22) * 0.4
+    land = _smooth_noise(n, 14, 21) * 0.6 + _smooth_noise(n, 45, 22) * 0.4
     ocean = np.array([30, 110, 200], float)
     green = np.array([70, 160, 80], float)
     sand = np.array([200, 180, 110], float)
-    m = np.clip((land - 0.52) * 8, 0, 1)[..., None]
+    m = np.clip((land - 0.52) * 30, 0, 1)[..., None]
     d = np.clip((land - 0.62) * 6, 0, 1)[..., None]
     rgb = ocean * (1 - m) + (green * (1 - d) + sand * d) * m
     cl = _smooth_noise(n, 12, 23) * 0.5 + _smooth_noise(n, 30, 24) * 0.5
-    c = np.clip((cl - 0.58) * 5, 0, 0.85)[..., None]
+    c = np.clip((cl - 0.6) * 12, 0, 0.8)[..., None]
     polar = np.clip((np.abs(y) - 0.82) * 8, 0, 1)[..., None]
     rgb = rgb * (1 - c) + 255 * c
     return rgb * (1 - polar) + 245 * polar
@@ -212,7 +213,8 @@ class Scenes:
             self._put(lay, self.earth, 540, 2180 - min(1, (t - 44) / 1.5) * 120)
             self._put(lay, self.moon, 930, 300 + 6 * dr)
             self._shooting(lay, t, [52.0])
-        lay.alpha_composite(self.scrim)
+        if not LIGHT_MODE:
+            lay.alpha_composite(self.scrim)
         return lay
 
     def _shooting(self, lay, t, times):
@@ -269,5 +271,6 @@ class EmojiTheme:
             r = im.rotate(8 * math.sin(t * 0.6 + i), resample=Image.BICUBIC, expand=True)
             r.putalpha(r.getchannel("A").point(lambda v: int(v * 0.55)))
             _paste_clip(lay, r, x + dx, y + dy)
-        lay.alpha_composite(self.scrim)
+        if not LIGHT_MODE:
+            lay.alpha_composite(self.scrim)
         return lay

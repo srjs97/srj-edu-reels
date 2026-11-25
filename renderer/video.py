@@ -11,11 +11,28 @@ import illus
 rng = np.random.default_rng(3)
 
 spec = json.load(open(sys.argv[1]))
+SPEC_DIR = __import__("os").path.dirname(__import__("os").path.abspath(sys.argv[1]))
 A_COL = tuple(spec["colA"])
 B_COL = tuple(spec["colB"])
 YEL = (255, 214, 64)
 WHITE = (255, 255, 255)
 GREY = (170, 178, 200)
+LIGHT = bool(spec.get("light"))
+illus.LIGHT_MODE = LIGHT
+INK, ACCENT, SOFT = (34, 34, 72), (214, 84, 16), (96, 96, 124)
+def deepen(c, target=110):
+    lum = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
+    k = min(1.0, target / max(lum, 1))
+    return tuple(int(v * k) for v in c)
+if LIGHT:
+    A_COL, B_COL = deepen(A_COL), deepen(B_COL)
+
+def ink(color):
+    """Map dark-theme text colours to light-theme ones."""
+    color = tuple(color)
+    if not LIGHT:
+        return color
+    return {WHITE: INK, YEL: ACCENT, GREY: SOFT}.get(color, deepen(color))
 
 
 def ease_out_back(x, s=1.9):
@@ -38,7 +55,7 @@ def font(size, bold=True):
 
 _txt = {}
 def text_img(s, size, color, bold=True, maxw=960, glow=True):
-    color = tuple(color)
+    color = ink(color)
     k = (s, size, color, bold, maxw, glow)
     if k in _txt:
         return _txt[k]
@@ -55,11 +72,15 @@ def text_img(s, size, color, bold=True, maxw=960, glow=True):
     org = (pad - bb[0], pad - bb[1])
     if glow:
         g = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-        ImageDraw.Draw(g).text(org, s, font=f, fill=color + (170,), stroke_width=4, stroke_fill=color + (170,))
-        g = g.filter(ImageFilter.GaussianBlur(14))
+        if LIGHT:
+            ImageDraw.Draw(g).text((org[0] + 4, org[1] + 5), s, font=f, fill=(90, 60, 20, 90), stroke_width=4, stroke_fill=(90, 60, 20, 90))
+            g = g.filter(ImageFilter.GaussianBlur(6))
+        else:
+            ImageDraw.Draw(g).text(org, s, font=f, fill=color + (170,), stroke_width=4, stroke_fill=color + (170,))
+            g = g.filter(ImageFilter.GaussianBlur(14))
         im = Image.alpha_composite(im, g)
         d = ImageDraw.Draw(im)
-    d.text(org, s, font=f, fill=color + (255,), stroke_width=6, stroke_fill=(10, 12, 30, 255))
+    d.text(org, s, font=f, fill=color + (255,), stroke_width=6 if not LIGHT else 3, stroke_fill=(255, 255, 255, 255) if LIGHT else (10, 12, 30, 255))
     _txt[k] = im
     return im
 
@@ -83,15 +104,30 @@ def bg_gradient():
     y = np.linspace(0, 1, H)[:, None]
     x = np.linspace(0, 1, W)[None, :]
     _th = spec.get("theme") if isinstance(spec.get("theme"), dict) else {}
-    top = np.array(_th.get("top", [12, 10, 40])); bot = np.array(_th.get("bottom", [4, 4, 14]))
+    pal = spec.get("palette", {})
+    top = np.array(pal.get("top", _th.get("top", [12, 10, 40]))); bot = np.array(pal.get("bottom", _th.get("bottom", [4, 4, 14])))
+    if spec.get("light"):
+        top = np.array(pal.get("top", [255, 248, 214])); bot = np.array(pal.get("bottom", [255, 232, 160]))
     g = top * (1 - y[..., None]) + bot * y[..., None]
+    if spec.get("light"):
+        for (cx, cy, r, col) in [(0.15, 0.2, 0.35, (255, 255, 255)), (0.9, 0.75, 0.4, (255, 210, 120)), (0.5, 1.05, 0.35, (255, 200, 110))]:
+            d = np.exp(-(((x - cx) ** 2 + ((y - cy) * 0.56) ** 2) / (r * r * 0.3)))
+            g = g * (1 - 0.5 * d[..., None]) + np.array(col)[None, None, :] * 0.5 * d[..., None]
+        return Image.fromarray(np.clip(g, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
     # nebula blobs
-    for (cx, cy, r, col) in [(0.2, 0.25, 0.35, (90, 40, 140)), (0.85, 0.7, 0.4, (20, 80, 140)), (0.5, 1.0, 0.3, (140, 60, 30))]:
+    neb = pal.get("neb", [(90, 40, 140), (20, 80, 140), (140, 60, 30)])
+    for (cx, cy, r), col in zip([(0.2, 0.25, 0.35), (0.85, 0.7, 0.4), (0.5, 1.0, 0.3)], neb):
         d = np.exp(-(((x - cx) ** 2 + ((y - cy) * 0.56) ** 2) / (r * r * 0.3)))
-        g = g + np.array(col)[None, None, :] * d[..., None] * 0.45
+        g = g + np.array(col)[None, None, :] * d[..., None] * pal.get("neb_strength", 0.45)
     return Image.fromarray(np.clip(g, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
 
 BG = bg_gradient()
+def _scrim_img():
+    y = np.linspace(0, 1, H)[:, None]
+    a = (40 + 90 * np.clip((y - 0.45) / 0.3, 0, 1)) * np.ones((1, W))
+    z = np.zeros((H, W))
+    return Image.fromarray(np.dstack([z + 5, z + 5, z + 15, a]).astype(np.uint8), "RGBA")
+SCRIM_IMG = _scrim_img()
 
 THEME = spec.get("theme", "space")
 SC = illus.Scenes() if THEME == "space" else None
@@ -112,7 +148,32 @@ def scene_layer(t):
             return lay
     return None
 
+_bgimg = {}
+def image_bg(t):
+    imgs = spec.get("bg_images")
+    if not imgs:
+        return None
+    for t0, t1, name in illus.SCENE_TIMES:
+        if t0 <= t < t1 and name in imgs:
+            if name not in _bgimg:
+                im = Image.open(__import__("os").path.join(SPEC_DIR, imgs[name])).convert("RGB")
+                sc = max(W * 1.12 / im.width, H * 1.12 / im.height)
+                _bgimg[name] = im.resize((int(im.width * sc), int(im.height * sc)), Image.LANCZOS)
+            im = _bgimg[name]
+            p = (t - t0) / (t1 - t0)
+            z = 1.0 + 0.10 * (1 - p)  # slow zoom out
+            cw, ch = int(W * z * im.width / (W * 1.12)), int(H * z * im.height / (H * 1.12))
+            cw, ch = min(im.width, int(W * 1.12 / z)), min(im.height, int(H * 1.12 / z))
+            x0 = (im.width - cw) // 2; y0 = (im.height - ch) // 2
+            fr = im.crop((x0, y0, x0 + cw, y0 + ch)).resize((W, H), Image.BILINEAR).convert("RGBA")
+            fr.alpha_composite(SCRIM_IMG)
+            return fr
+    return None
+
 def draw_bg(t):
+    ib = image_bg(t)
+    if ib is not None:
+        return ib
     fr = BG.copy()
     d = ImageDraw.Draw(fr)
     for x, y, z in stars:
@@ -120,11 +181,15 @@ def draw_bg(t):
         tw = 0.6 + 0.4 * math.sin(t * 3 + x)
         c = int(120 + 135 * z * tw)
         r = 1 + 2 * z
-        d.ellipse((x - r, yy - r, x + r, yy + r), fill=(c, c, min(255, c + 20), 255))
+        if LIGHT:
+            d.ellipse((x - r, yy - r, x + r, yy + r), fill=(255, 200, 90, int(90 + 100 * z * tw)))
+        else:
+            d.ellipse((x - r, yy - r, x + r, yy + r), fill=(c, c, min(255, c + 20), 255))
     lay = scene_layer(t)
     if lay is not None:
         fr.alpha_composite(lay)
-    fr.alpha_composite(SC.vig)
+    if not LIGHT:
+        fr.alpha_composite(SC.vig)
     return fr
 
 
@@ -196,7 +261,7 @@ def panel(t_in, t_out, box, col, alpha=140):
     x0, y0, x1, y1 = box
     im = Image.new("RGBA", (x1 - x0, y1 - y0), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle((0, 0, im.width - 1, im.height - 1), 36, fill=(14, 16, 40, alpha), outline=col + (230,), width=5)
+    d.rounded_rectangle((0, 0, im.width - 1, im.height - 1), 36, fill=(255, 255, 250, 215) if LIGHT else (14, 16, 40, alpha), outline=col + (230,), width=5)
     def fn(fr, tl, oa):
         p = ease_out(tl / 0.35)
         paste(fr, im, (x0 + x1) / 2, (y0 + y1) / 2 + (1 - p) * 60, 1, oa * p)
@@ -303,7 +368,7 @@ for k, n in enumerate(["3", "2", "1"]):
 T(Q["answer"], 41.4, 43.9, 1280, 96, A_COL, "slam", sound="ding", gain=0.8)
 T(Q["why"], 42.0, 43.9, 1420, 48, WHITE, "up", glow=False)
 ANS_RING = Image.new("RGBA", (460, 200), (0, 0, 0, 0))
-ImageDraw.Draw(ANS_RING).rounded_rectangle((4, 4, 455, 195), 44, outline=(120, 255, 140, 255), width=10)
+ImageDraw.Draw(ANS_RING).rounded_rectangle((4, 4, 455, 195), 44, outline=((30, 170, 70) if LIGHT else (120, 255, 140)) + (255,), width=10)
 custom(41.4, 43.9, lambda fr, tl, oa: paste(fr, ANS_RING, 300 if Q["correct"] == "A" else 780, 940, ease_out_back(tl / 0.3), oa))
 
 # --- Scene 7: bonus (44.0 - 50.5)
@@ -347,6 +412,16 @@ TAG = text_img(spec["tag"], 34, YEL, glow=False)
 
 def render():
     out = sys.argv[2]
+    if __import__("os").environ.get("FRAMES"):
+        for ft in __import__("os").environ["FRAMES"].split(","):
+            t = float(ft)
+            fr = draw_bg(t)
+            for t_in, t_out, fn in els:
+                if t_in <= t < t_out:
+                    fn(fr, t - t_in, min(1, (t_out - t) / 0.25))
+            paste(fr, WATERMARK, 220, 150, 1, 0.85); paste(fr, TAG, W - 240, 150, 1, 0.9)
+            fr.convert("RGB").save(out.replace(".mp4", "") + f"_{ft}.png")
+        return
     p = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
                           "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", out], stdin=subprocess.PIPE)
     n = int(DUR * FPS)
@@ -362,7 +437,7 @@ def render():
         paste(fr, TAG, W - 240, 150, 1, 0.9)
         # progress bar
         d = ImageDraw.Draw(fr)
-        d.rectangle((0, 0, int(W * t / DUR), 10), fill=YEL + (255,))
+        d.rectangle((0, 0, int(W * t / DUR), 10), fill=(ACCENT if LIGHT else YEL) + (255,))
         dx, dy = 0, 0
         for s in shakes:
             a, b = shake(t, s); dx += a; dy += b

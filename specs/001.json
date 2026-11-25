@@ -163,5 +163,6 @@
  "graphicA": "meteoroids",
  "graphicB": "asteroid",
  "theme": "space",
- "topicNo": 1
+ "topicNo": 1,
+ "light": true
 }
