@@ -1,9 +1,8 @@
 # SRJ EDU daily reel runbook
 
-Two reels a day (Suraj, 2026-11-25): slots **13:00** and **18:30** IST. Two scheduled tasks run this runbook,
-one at about 11:45 AM IST for the 13:00 slot and one at about 5:10 PM IST for the 18:30 slot. Each run is told
-its SLOT. It makes one reel from the next row of the topics sheet and schedules it on Instagram, Facebook and
-YouTube for **SLOT IST the same day**.
+One reel a day (Suraj, 2026-11-25): slot **19:00** IST. A scheduled task runs this runbook at about 5:40 PM IST
+with SLOT = 19:00. It makes one reel from the next row of the topics sheet and schedules it on Instagram, Facebook
+and YouTube for **SLOT IST the same day**. (The old 13:00 slot is switched off.)
 
 ## Fixed facts
 
@@ -79,16 +78,16 @@ illustrated background. English names stay as the big titles (`thingA`/`thingB`)
 
      📌 Save ചെയ്യൂ, പരീക്ഷയ്ക്ക് ഉപകാരപ്പെടും
      📤 ഇത് അറിയാത്ത ഒരു ഫ്രണ്ടിന് Share ചെയ്യൂ
-     🔔 Follow @srj_edu_app, ദിവസവും 2 This vs That
+     🔔 Follow @srj_edu_app, ദിവസവും This vs That
 
      #srjedu #malayalam #thisvsthat #<thingA no spaces> #<thingB no spaces> #<category tag> #science #education #learnmalayalam #keralastudents #psc #gk #reels #explore
      ```
      (Instagram may add `#reelsinstagram`.) YouTube uses the same first four blocks, then
-     `🔔 Subscribe ചെയ്യൂ, ദിവസവും 2 This vs That` and `#shorts #srjedu #malayalam #thisvsthat #<thingA> #<thingB> #<category tag> #science #education #keralastudents #psc #gk`.
-8. **Record**: write `Scheduled YYYY-MM-DD <SLOT>` into column F of the row (e.g. `Scheduled 2026-11-26 13:00`).
+     `🔔 Subscribe ചെയ്യൂ, ദിവസവും This vs That` and `#shorts #srjedu #malayalam #thisvsthat #<thingA> #<thingB> #<category tag> #science #education #keralastudents #psc #gk`.
+8. **Record**: write `Scheduled YYYY-MM-DD <SLOT>` into column F of the row (e.g. `Scheduled 2026-11-26 19:00`).
 9. **Report**: if any step fails, stop, leave column F empty, and say exactly which step failed and why.
 
-**Buffer limits** (free plan): at most **10 scheduled posts in the whole org at a time**, and at most 2 YouTube posts per day (exactly the 2 reels).
+**Buffer limits** (free plan): at most **10 scheduled posts in the whole org at a time**, and at most 2 YouTube posts per day.
 Other SRJ EDU work (PSC quiz posts) shares the same Buffer, so before step 7 count the org's `scheduled` posts
 (list_posts, status scheduled). The reel needs 3 free slots. If fewer are free, schedule in this order until full:
 **YouTube first** (Suraj: YouTube carries only these reels), then Instagram, then Facebook. Never delete or move other posts to make room. Write what was scheduled in column F,
