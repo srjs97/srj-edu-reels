@@ -45,6 +45,10 @@ bonus, fun fact, outro.
    - `"light": true` always (Suraj chose a light yellow background, 2026-11-25). Text colours are
      converted automatically; keep using the normal white/yellow/grey values from the example.
    - `colA` / `colB`: two contrasting bright colours (they are darkened automatically for the light background).
+   - Engagement text (optional, renderer has defaults): `scenes.hook_banner` = a short curiosity line on a red
+     banner at second 0 (default `90% പേർക്കും ഇത് അറിയില്ല!`; vary it per topic, e.g. `ഇത് 10-ൽ 9 പേർക്കും തെറ്റും!`),
+     `scenes.teaser` (default `അവസാനം ഒരു ക്വിസ് ഉണ്ട്!`). `hook2` should be a question or a surprising claim and
+     `hook3` a 2-3 word punch (e.g. `പക്ഷേ അല്ല!`). The first frame is the thumbnail, so it must show both things.
    - `theme`: `"space"` for category `Astronomy & Space`. For every other category use
      `{"emojis": [5 emojis for the category]}` (the light yellow background is applied automatically).
 5. **Render**: `renderer/make_reel.sh specs/NNN.json reels/NNN.mp4` (about 2.5 min). Then check it:
@@ -57,16 +61,23 @@ bonus, fun fact, outro.
    - Instagram: `metadata.instagram = { type: "reel", shouldShareToFeed: true }`
    - Facebook: `metadata.facebook = { type: "reel" }`
    - YouTube: `metadata.youtube = { type: "short", title: "<Thing A> vs <Thing B> | <Malayalam hook> #shorts", categoryId: "27", madeForKids: false }` (title under 100 characters)
-   - Caption (`text`), same for all three:
+   - Caption (`text`). Engagement style (Suraj, 2026-11-25: reach matters). Instagram and Facebook:
      ```
-     <Thing A> vs <Thing B> 🤔
-     <2 lines in Malayalam: the key difference>
+     <hook_banner from the spec> 😳 <Thing A> ഉം <Thing B> ഉം ഒന്നാണോ?
 
-     ക്വിസ്: <quiz question in one line> 👇 ഉത്തരം കമന്റ് ചെയ്യൂ!
+     <1 line in Malayalam: what they share, then the key difference> 👇
+     <short "A = ... | B = ..." line in Malayalam>
 
-     Follow @srj_edu_app for daily This vs That 🔥
-     #srjedu #malayalam #thisvsthat #<thingA no spaces> #<thingB no spaces> #<category tag> #science #education #learnmalayalam #reels
+     🧠 ക്വിസ്: <quiz question in one line> ഉത്തരം കമന്റ് ചെയ്യൂ 👇
+
+     📌 Save ചെയ്യൂ, പരീക്ഷയ്ക്ക് ഉപകാരപ്പെടും
+     📤 ഇത് അറിയാത്ത ഒരു ഫ്രണ്ടിന് Share ചെയ്യൂ
+     🔔 Follow @srj_edu_app, ദിവസവും 2 This vs That
+
+     #srjedu #malayalam #thisvsthat #<thingA no spaces> #<thingB no spaces> #<category tag> #science #education #learnmalayalam #keralastudents #psc #gk #reels #explore
      ```
+     (Instagram may add `#reelsinstagram`.) YouTube uses the same first four blocks, then
+     `🔔 Subscribe ചെയ്യൂ, ദിവസവും 2 This vs That` and `#shorts #srjedu #malayalam #thisvsthat #<thingA> #<thingB> #<category tag> #science #education #keralastudents #psc #gk`.
 8. **Record**: write `Scheduled YYYY-MM-DD <SLOT>` into column F of the row (e.g. `Scheduled 2026-11-26 13:00`).
 9. **Report**: if any step fails, stop, leave column F empty, and say exactly which step failed and why.
 
