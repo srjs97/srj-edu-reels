@@ -1,7 +1,9 @@
 # SRJ EDU daily reel runbook
 
-A scheduled task runs this every day at about 5:15 PM IST. It makes one reel from the next row of the
-topics sheet and schedules it on Instagram, Facebook and YouTube for **6:30 PM IST the same day**.
+Two reels a day (Suraj, 2026-11-25): slots **13:00** and **18:30** IST. Two scheduled tasks run this runbook,
+one at about 11:45 AM IST for the 13:00 slot and one at about 5:10 PM IST for the 18:30 slot. Each run is told
+its SLOT. It makes one reel from the next row of the topics sheet and schedules it on Instagram, Facebook and
+YouTube for **SLOT IST the same day**.
 
 ## Fixed facts
 
@@ -25,8 +27,8 @@ bonus, fun fact, outro.
 
 1. **Setup**: `apt-get install -y fonts-smc-manjari fonts-noto-core` (Manjari Bold font; PIL needs raqm, which is present).
    Clone this repo.
-2. **Already done today?** If any row's column F already starts with `Scheduled <today's date>`, stop: today's reel
-   is already scheduled. Report that and do nothing else.
+2. **Slot already done?** If any row's column F already starts with `Scheduled <today's date> <SLOT>`, stop: this
+   slot is already scheduled. Report that and do nothing else.
 3. **Pick the topic**: read `A4:F1196`. The topic is the first row whose column F is empty. Skip a row only if
    `specs/NNN.json` already exists *and* Buffer already has its posts (then just fill column F).
 4. **Write the spec** `specs/NNN.json` (NNN = Topic # zero-padded to 3). Copy the shape of `specs/002.json`
@@ -44,16 +46,14 @@ bonus, fun fact, outro.
      converted automatically; keep using the normal white/yellow/grey values from the example.
    - `colA` / `colB`: two contrasting bright colours (they are darkened automatically for the light background).
    - `theme`: `"space"` for category `Astronomy & Space`. For every other category use
-     `{"emojis": [5 emojis for the category], "top": [r,g,b], "bottom": [r,g,b]}` with a dark top colour
-     tinted to the category (e.g. green-dark for nature, teal-dark for chemistry, red-dark for medicine)
-     and a near-black bottom.
+     `{"emojis": [5 emojis for the category]}` (the light yellow background is applied automatically).
 5. **Render**: `renderer/make_reel.sh specs/NNN.json reels/NNN.mp4` (about 2.5 min). Then check it:
    extract frames at 3.5, 7.5, 12, 22, 31, 39, 49, 55, 59 s with ffmpeg and look at them. Fix any text that
    overflows, overlaps or shows boxes instead of letters, and render again.
 6. **Publish the file**: commit `specs/NNN.json` and `reels/NNN.mp4`, push to `main`. Confirm
    `curl -sI <raw URL>` returns 200 with `content-length` > 1,000,000.
 7. **Schedule on Buffer**, `mode: customScheduled`, `schedulingType: automatic`,
-   `dueAt: <today>T18:30:00+05:30`, asset `{ video: { url: <raw URL> } }`:
+   `dueAt: <today>T<SLOT>:00+05:30`, asset `{ video: { url: <raw URL> } }`:
    - Instagram: `metadata.instagram = { type: "reel", shouldShareToFeed: true }`
    - Facebook: `metadata.facebook = { type: "reel" }`
    - YouTube: `metadata.youtube = { type: "short", title: "<Thing A> vs <Thing B> | <Malayalam hook> #shorts", categoryId: "27", madeForKids: false }` (title under 100 characters)
@@ -67,14 +67,14 @@ bonus, fun fact, outro.
      Follow @srj_edu_app for daily This vs That 🔥
      #srjedu #malayalam #thisvsthat #<thingA no spaces> #<thingB no spaces> #<category tag> #science #education #learnmalayalam #reels
      ```
-8. **Record**: write `Scheduled YYYY-MM-DD` into column F of the row.
+8. **Record**: write `Scheduled YYYY-MM-DD <SLOT>` into column F of the row (e.g. `Scheduled 2026-11-26 13:00`).
 9. **Report**: if any step fails, stop, leave column F empty, and say exactly which step failed and why.
 
-**Buffer limits** (free plan): at most **10 scheduled posts in the whole org at a time**, and at most 2 YouTube posts per day.
+**Buffer limits** (free plan): at most **10 scheduled posts in the whole org at a time**, and at most 2 YouTube posts per day (exactly the 2 reels).
 Other SRJ EDU work (PSC quiz posts) shares the same Buffer, so before step 7 count the org's `scheduled` posts
 (list_posts, status scheduled). The reel needs 3 free slots. If fewer are free, schedule in this order until full:
 **YouTube first** (Suraj: YouTube carries only these reels), then Instagram, then Facebook. Never delete or move other posts to make room. Write what was scheduled in column F,
-e.g. `Scheduled YYYY-MM-DD (YT+IG; FB skipped: Buffer 10-post limit)`, and say so clearly in the report so
+e.g. `Scheduled YYYY-MM-DD 18:30 (YT+IG; FB skipped: Buffer 10-post limit)`, and say so clearly in the report so
 Suraj can add the rest by hand.
 
 Never post with `shareNow`. Never schedule more than one day ahead (the free plan holds only 10 posts).
