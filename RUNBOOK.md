@@ -20,8 +20,7 @@ YouTube for **SLOT IST the same day**.
 
 60 s, 1080x1920, **on-screen text in Malayalam**, NO voiceover, synthesized sound effects + background music,
 illustrated background. English names stay as the big titles (`thingA`/`thingB`) with the Malayalam word as
-`subA`/`subB`. Scene order is fixed by `renderer/video.py`: hook, A vs B, B card, A card, recap, quiz,
-bonus, fun fact, outro.
+`subA`/`subB`. Since 2026-11-25 the scenes are listed in the spec (explainer style, see step 4).
 
 ## Steps
 
@@ -31,28 +30,36 @@ bonus, fun fact, outro.
    slot is already scheduled. Report that and do nothing else.
 3. **Pick the topic**: read `A4:F1196`. The topic is the first row whose column F is empty. Skip a row only if
    `specs/NNN.json` already exists *and* Buffer already has its posts (then just fill column F).
-4. **Write the spec** `specs/NNN.json` (NNN = Topic # zero-padded to 3). Copy the shape of `specs/002.json`
-   exactly. Rules:
-   - `topicNo` = Topic #, `tag` = `THIS vs THAT #<Topic #>`.
-   - All text natural, simple Malayalam that a school student understands. Keep each line short
-     (bullets about 30 Malayalam characters max; the renderer shrinks text that is too wide, but short reads better).
-   - 5 bullets per card: 3 white facts, 1 grey bracket aside (size 40), 1 yellow key number/size line.
+4. **Write the spec** `specs/NNN.json` (NNN = Topic # zero-padded to 3) in the **explainer style**
+   (Suraj, 2026-11-25: "make it like this reference video, without voice"). Copy the shape of
+   `specs/001x.json` exactly and read `renderer/explainer.py` for what each visual draws. The look: one idea
+   per scene, a big code-drawn diagram in the middle, an English heading on top, a Malayalam subtitle box at the
+   bottom, dark purple and light peach scenes alternating, green progress bar, "SRJ EDU APP" badge.
+   Rules:
+   - Top level: `"style": "explainer"`, `topicNo`, `thingA`, `thingB`, `colA`, `colB` (two contrasting colours), `scenes`.
+   - About 10-11 scenes, total `dur` = **60 s** exactly. Scene keys: `dur`, `bg` (`dark`/`light`, alternate them),
+     `head` (short ENGLISH CAPS heading), optional `headStyle: "pill"`, `headCol`, `visual`, `captions`,
+     optional `capAt` (start second of each caption inside the scene).
+   - `captions`: 1-2 short Malayalam subtitle lines per scene (max ~45 characters each). Wrap the key words in
+     `**...**` to show them yellow. No emoji inside captions (the font has none).
+   - Scene 1 is the thumbnail: `hero` with `vs: true`, both things with `icon` + `name`, heading `<A> VS <B>`,
+     and a curiosity caption. It is drawn fully at frame 0.
+   - Visual types (pick what fits the topic, use several kinds):
+     `hero` (1-3 icons with `label` pills / `name`), `scale` (size comparison, `size` 0-1),
+     `bars` (two white cards with value bars 0-1, like "TEMP / ENERGY"), `particles` (beakers or boxes with moving
+     particles: `speed`, `liquid`, `dot`, `label`, `steam`, `shape: "box"`, `chip`), `flow` (2-3 icons joined by
+     arrows: process or cause and effect), `number` (big counting number + `label`), `remember` (KEY IDEA banner),
+     `table` (recap rows: [row label, A, B]), `quiz` (question lines, 2 options, `correct` 0/1; use
+     `capAt: [0, dur-2.4]` so the second caption gives the answer at the reveal), `outro` (always last, 5 s,
+     captions: `അടുത്തത്: **<next row's A> vs <B>**` and `**SRJ EDU APP** ഫോളോ ചെയ്യൂ!`).
+   - Icons: any single emoji that pictures the thing, or `rock:asteroid`, `rock:meteoroids`, `rock:small`.
+   - Suggested order: hook (hero vs), the key difference, A explained, B explained, 1-2 diagram scenes that show
+     *why* (bars / particles / flow / scale), a remember or number scene, recap table, quiz, outro.
    - Every fact must be correct. Use the sheet's hook (column E) as the core difference. If unsure of a
      number, leave it out rather than guess.
-   - `quiz.correct` is `"A"` or `"B"`; `quiz.answer` is that thing's English name in caps with `!`.
-   - `outro3` names the next row's topic: `അടുത്തത്: <Thing A> vs <Thing B>`.
-   - `emojiA` / `emojiB`: one emoji each that pictures the thing (used as the big illustration).
-   - `"light": true` always (Suraj chose a light yellow background, 2026-11-25). Text colours are
-     converted automatically; keep using the normal white/yellow/grey values from the example.
-   - `colA` / `colB`: two contrasting bright colours (they are darkened automatically for the light background).
-   - Engagement text (optional, renderer has defaults): `scenes.hook_banner` = a short curiosity line on a red
-     banner at second 0 (default `90% പേർക്കും ഇത് അറിയില്ല!`; vary it per topic, e.g. `ഇത് 10-ൽ 9 പേർക്കും തെറ്റും!`),
-     `scenes.teaser` (default `അവസാനം ഒരു ക്വിസ് ഉണ്ട്!`). `hook2` should be a question or a surprising claim and
-     `hook3` a 2-3 word punch (e.g. `പക്ഷേ അല്ല!`). The first frame is the thumbnail, so it must show both things.
-   - `theme`: `"space"` for category `Astronomy & Space`. For every other category use
-     `{"emojis": [5 emojis for the category]}` (the light yellow background is applied automatically).
-5. **Render**: `renderer/make_reel.sh specs/NNN.json reels/NNN.mp4` (about 2.5 min). Then check it:
-   extract frames at 3.5, 7.5, 12, 22, 31, 39, 49, 55, 59 s with ffmpeg and look at them. Fix any text that
+   - The old fixed-template renderer (`video.py`, specs without `"style"`) still works as a fallback.
+5. **Render**: `renderer/make_reel.sh specs/NNN.json reels/NNN.mp4` (about 1.5 min; it picks the explainer
+   renderer from `"style"`). Then check it: extract a frame from the middle of every scene with ffmpeg and look at them. Fix any text that
    overflows, overlaps or shows boxes instead of letters, and render again.
 6. **Publish the file**: commit `specs/NNN.json` and `reels/NNN.mp4`, push to `main`. Confirm
    `curl -sI <raw URL>` returns 200 with `content-length` > 1,000,000.
