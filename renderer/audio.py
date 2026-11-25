@@ -191,8 +191,11 @@ PROGS = [
 ]
 
 
+BPMS = [118, 112, 122, 108]
+
+
 def make_music(total, drop, seed=0):
-    bpm = [100, 96, 104, 92][seed % 4]
+    bpm = BPMS[seed % 4]
     beat = 60 / bpm
     bar = 4 * beat
     buf = np.zeros(int(total * SR))
@@ -207,12 +210,12 @@ def make_music(total, drop, seed=0):
         if t >= drop - 1e-6:
             for b in range(4):
                 tb = t + b * beat
-                add(buf, synth_kick(), tb, 0.9)
+                add(buf, synth_kick(), tb, 1.0)
                 if b in (1, 3):
                     add(buf, synth_clap(), tb, 0.45)
                 add(buf, synth_bass(note(root - 12), beat * 0.95), tb, 0.55)
-                for e in range(2):
-                    add(buf, synth_hat(), tb + e * beat / 2 + (beat / 4 if e else 0) * 0, 0.8)
+                for e in range(4):
+                    add(buf, synth_hat(), tb + e * beat / 4, 0.9 if e % 2 else 0.5)
             for s in range(8):
                 m = chord[arp_pat[s]] + 12
                 add(buf, synth_pluck(note(m)), t + s * beat / 2, 0.5)
@@ -243,7 +246,7 @@ def main():
     # smooth duck
     k = int(0.05 * SR)
     duck = np.convolve(duck, np.ones(k) / k, mode="same")
-    mix = 0.32 * music * duck + 0.75 * sfx
+    mix = 0.40 * music * duck + 0.75 * sfx
     mix = np.tanh(1.2 * mix) / np.tanh(1.2)
     mix = 0.89 * mix / (np.abs(mix).max() + 1e-9)
     # stereo: tiny width on music

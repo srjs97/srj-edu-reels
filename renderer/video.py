@@ -272,14 +272,96 @@ def custom(t_in, t_out, fn):
     els.append((t_in, t_out, fn))
 
 
+def pill(text, bg, fg=(255, 255, 255), size=52, emoji=None, pad=(36, 18)):
+    t = text_img(text, size, fg, glow=False)
+    t = t.crop(t.getbbox())
+    e = illus.emoji_img(emoji, int(size * 1.25)) if emoji else None
+    w = t.width + 2 * pad[0] + (e.width + 16 if e else 0)
+    h = max(t.height, e.height if e else 0) + 2 * pad[1]
+    im = Image.new("RGBA", (w + 12, h + 12), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((6, 10, w + 6, h + 10), h // 2, fill=(0, 0, 0, 50))
+    d.rounded_rectangle((4, 4, w + 4, h + 4), h // 2, fill=tuple(bg) + (255,))
+    x = 4 + pad[0]
+    if e:
+        im.alpha_composite(e, (x, 4 + (h - e.height) // 2)); x += e.width + 16
+    im.alpha_composite(t, (x, 4 + (h - t.height) // 2))
+    return im
+
+
+def hook_icon(which, size):
+    g = spec.get("graphic" + which)
+    if g == "asteroid":
+        return ASTEROID.resize((size, size), Image.LANCZOS)
+    if g == "meteoroids":
+        return FRAGS[0].resize((int(size * 0.8), int(size * 0.8)), Image.LANCZOS)
+    return illus.emoji_img(spec.get("emoji" + which, "❓"), size)
+
+
+_conf_rng = np.random.default_rng(9)
+CONF_COLS = [(255, 90, 90), (255, 190, 40), (60, 170, 255), (80, 200, 120), (190, 110, 255)]
+def confetti(t0, n=90, x0=W / 2, y0=900):
+    parts = [(_conf_rng.uniform(-1, 1) * 900, _conf_rng.uniform(-1700, -700), _conf_rng.uniform(0, 6.28), CONF_COLS[k % 5], _conf_rng.uniform(10, 20)) for k in range(n)]
+    def fn(fr, tl, oa):
+        d = ImageDraw.Draw(fr)
+        for vx, vy, ph, col, s in parts:
+            x = x0 + vx * tl
+            y = y0 + vy * tl + 1900 * tl * tl
+            if y > H + 40:
+                continue
+            w = s * abs(math.cos(ph + tl * 9))
+            d.rectangle((x - w / 2, y - s / 3, x + w / 2, y + s / 3), fill=col + (int(255 * oa),))
+    custom(t0, t0 + 1.8, fn)
+
+
+SCENE_CUTS = [4.2, 8.2, 17.6, 27.0, 35.4, 44.0, 50.5, 56.0]
+def swipe_overlay(fr, t):
+    for c in SCENE_CUTS:
+        dt = t - (c - 0.18)
+        if 0 <= dt < 0.36:
+            p = dt / 0.36
+            x = -400 + p * (W + 800)
+            lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            d = ImageDraw.Draw(lay)
+            col = (ACCENT if LIGHT else YEL)
+            d.polygon([(x - 260, 0), (x + 60, 0), (x - 140, H), (x - 460, H)], fill=col + (235,))
+            d.polygon([(x + 90, 0), (x + 150, 0), (x - 50, H), (x - 110, H)], fill=(255, 255, 255, 200))
+            fr.alpha_composite(lay)
+
+
+BPM = [118, 112, 122, 108][int(spec.get("topicNo", 0)) % 4]
+_bar = 4 * 60 / BPM
+BEATS = [k * _bar + b * 60 / BPM for k in range(200) for b in range(4) if k * _bar >= 4.2 - 1e-6 and k * _bar + b * 60 / BPM < 59]
+def beat_zoom(t):
+    z = 1.0
+    for bt in BEATS:
+        if 0 <= t - bt < 0.25:
+            z = 1.0 + 0.014 * math.exp(-(t - bt) * 14)
+    return z
+
+
 A, B = spec["thingA"].upper(), spec["thingB"].upper()
 S = spec["scenes"]
 
-# --- Scene 1: hook (0 - 4.2)
-sfx.append(("riser", 2.0, 0.6))
-T(S["hook1"], 0.2, 4.1, 760, 66, WHITE, "up", sound="whoosh", gain=0.5)
-T(S["hook2"], 1.0, 4.1, 900, 92, YEL, "pop", sound="pop")
-T(S["hook3"], 2.6, 4.1, 1100, 120, (255, 80, 90), "slam", sound="boom", gain=0.9)
+# --- Scene 1: hook (0 - 4.2) -- frame 0 is already a full "thumbnail"
+sfx.append(("boom", 0.0, 0.7))
+sfx.append(("riser", 2.4, 0.6))
+BANNER = pill(S.get("hook_banner", "90% പേർക്കും ഇത് അറിയില്ല!"), (225, 50, 60), size=54)
+custom(-1, 4.1, lambda fr, tl, oa: paste(fr, BANNER, W / 2, 380, 1 + 0.03 * math.sin(tl * 6), oa))
+ICON_A, ICON_B = hook_icon("A", 300), hook_icon("B", 300)
+def g_hook_icons(fr, tl, oa):
+    bob = 14 * math.sin(tl * 3)
+    paste(fr, glow_disc(150, A_COL), 290, 720, 1, 0.35 * oa)
+    paste(fr, glow_disc(150, B_COL), 790, 720, 1, 0.35 * oa)
+    paste(fr, ICON_A.rotate(6 * math.sin(tl * 2), resample=Image.BICUBIC, expand=True), 290, 720 + bob, 1, oa)
+    paste(fr, ICON_B.rotate(-6 * math.sin(tl * 2), resample=Image.BICUBIC, expand=True), 790, 720 - bob, 1, oa)
+custom(-1, 4.1, g_hook_icons)
+T(A, -1, 4.1, 960, 64, A_COL, "pop", cx=290, maxw=480)
+T(B, -1, 4.1, 960, 64, B_COL, "pop", cx=790, maxw=480)
+VS_BADGE = pill("VS", (34, 34, 72) if LIGHT else (255, 255, 255), (255, 255, 255) if LIGHT else (20, 20, 40), size=60)
+custom(-1, 4.1, lambda fr, tl, oa: paste(fr, VS_BADGE, W / 2, 740, 1 + 0.08 * abs(math.sin(tl * 5)), oa))
+T(S["hook2"], 1.2, 4.1, 1200, 92, YEL, "slam", sound="pop")
+T(S["hook3"], 2.5, 4.1, 1380, 120, (230, 40, 60), "slam", sound="boom", gain=0.9)
 
 # --- Scene 2: A vs B (4.2 - 8.2)
 T(A, 4.25, 8.1, 640, 130, A_COL, "left", sound="whoosh")
@@ -339,6 +421,10 @@ def g_meteoroids(fr, tl, oa):
 
 GA = g_meteoroids if spec.get("graphicA") == "meteoroids" else g_emoji(spec.get("emojiA", "❓"), A_COL)
 scene_card(17.6, 27.0, A, A_COL, S["a_bullets"], GA, spec.get("subA"))
+
+TEASER = pill(S.get("teaser", "അവസാനം ഒരു ക്വിസ് ഉണ്ട്!"), (34, 34, 72) if LIGHT else (255, 214, 64), (255, 255, 255) if LIGHT else (20, 20, 40), size=44, emoji="👀")
+custom(20.5, 26.9, lambda fr, tl, oa: paste(fr, TEASER, W / 2, 1790 + 8 * math.sin(tl * 4), ease_out_back(tl / 0.4), oa))
+sfx.append(("pop_hi", 20.5, 0.6))
 
 # --- Scene 5: recap table (27.0 - 35.4)
 T(S["recap_title"], 27.0, 35.3, 330, 96, YEL, "slam", sound="boom", gain=0.6)
@@ -400,12 +486,21 @@ T(F["big"], 51.1, 55.9, 760, 150, A_COL, "slam", sound="boom", gain=0.8)
 for i, line in enumerate(F["lines"]):
     T(line, 51.9 + i * 0.6, 55.9, 940 + i * 85, 54, WHITE, "up", glow=False, sound="whoosh" if i == 0 else None, gain=0.4)
 
+confetti(41.4, y0=1000)
+confetti(56.0, y0=1100)
 # --- Scene 9: outro (56.0 - 60.0)
+CTA1 = pill("Save ചെയ്യൂ", (225, 50, 60), size=46, emoji="📌")
+CTA2 = pill("Share ചെയ്യൂ", (40, 130, 220), size=46, emoji="📤")
+custom(57.8, 60.0, lambda fr, tl, oa: paste(fr, CTA1, W * 0.29, 1300, ease_out_back(tl / 0.35), oa))
+custom(58.1, 60.0, lambda fr, tl, oa: paste(fr, CTA2, W * 0.71, 1300, ease_out_back(tl / 0.35), oa))
+sfx.append(("pop", 57.8, 0.6)); sfx.append(("pop", 58.1, 0.6))
 T(S["outro1"], 56.0, 60.0, 760, 78, WHITE, "pop", sound="ding", gain=0.9)
 T(S["outro2"], 56.6, 60.0, 920, 66, YEL, "up", sound="whoosh", gain=0.4)
 T(S["outro3"], 57.3, 60.0, 1080, 48, GREY, "up", glow=False, sound="pop_hi", gain=0.5)
 
 DUR = 60.0
+for _c in SCENE_CUTS:
+    sfx.append(("whoosh", _c - 0.25, 0.55))
 WATERMARK = text_img(spec["brand"], 40, WHITE, glow=False)
 TAG = text_img(spec["tag"], 34, YEL, glow=False)
 
@@ -438,10 +533,15 @@ def render():
         # progress bar
         d = ImageDraw.Draw(fr)
         d.rectangle((0, 0, int(W * t / DUR), 10), fill=(ACCENT if LIGHT else YEL) + (255,))
+        swipe_overlay(fr, t)
         dx, dy = 0, 0
         for s in shakes:
             a, b = shake(t, s); dx += a; dy += b
         img = fr.convert("RGB")
+        z = beat_zoom(t)
+        if z > 1.001:
+            cw, ch = int(W / z), int(H / z)
+            img = img.crop(((W - cw) // 2, (H - ch) // 2, (W - cw) // 2 + cw, (H - ch) // 2 + ch)).resize((W, H), Image.BILINEAR)
         if dx or dy:
             img = img.transform(img.size, Image.AFFINE, (1, 0, -dx, 0, 1, -dy), resample=Image.BILINEAR)
         p.stdin.write(img.tobytes())
