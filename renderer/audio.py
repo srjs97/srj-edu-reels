@@ -194,7 +194,7 @@ PROGS = [
 BPMS = [118, 112, 122, 108]
 
 
-def make_music(total, drop, seed=0):
+def make_music(total, drop, seed=0, light=False):
     bpm = BPMS[seed % 4]
     beat = 60 / bpm
     bar = 4 * beat
@@ -207,7 +207,11 @@ def make_music(total, drop, seed=0):
     while t < total:
         root, chord = prog[k % 4]
         add(buf, synth_pad([note(m) for m in chord], bar + 0.3), t, 0.35)
-        if t >= drop - 1e-6:
+        if light:
+            for s in range(8):
+                m = chord[arp_pat[s]] + 12
+                add(buf, synth_pluck(note(m)), t + s * beat / 2, 0.22)
+        elif t >= drop - 1e-6:
             for b in range(4):
                 tb = t + b * beat
                 add(buf, synth_kick(), tb, 1.0)
@@ -228,11 +232,23 @@ def make_music(total, drop, seed=0):
     return buf / (np.abs(buf).max() + 1e-9)
 
 
+def load_voice(path, total):
+    """voiceover wav (any rate, mono/stereo) -> mono float at SR, padded to total seconds, peak 0.8."""
+    import subprocess
+    raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"],
+                         capture_output=True, check=True).stdout
+    v = np.frombuffer(raw, np.int16).astype(float) / 32768
+    out = np.zeros(int(total * SR))
+    out[: min(len(v), len(out))] = v[: len(out)]
+    return 0.8 * out / (np.abs(out).max() + 1e-9)
+
+
 def main():
     cues = json.load(open(sys.argv[1]))
     out = sys.argv[2]
     total = cues["duration"]
-    music = make_music(total, cues["drop"], cues.get("seed", 0))
+    voice = load_voice(cues["voice"], total) if cues.get("voice") else None
+    music = make_music(total, cues["drop"], cues.get("seed", 0), light=voice is not None)
     sfx = np.zeros_like(music)
     duck = np.ones_like(music)
     cache = {}
@@ -246,8 +262,15 @@ def main():
     # smooth duck
     k = int(0.05 * SR)
     duck = np.convolve(duck, np.ones(k) / k, mode="same")
-    mix = 0.40 * music * duck + 0.75 * sfx
-    mix = np.tanh(1.2 * mix) / np.tanh(1.2)
+    if voice is not None:
+        # voiceover on top: music low and ducked further while the voice speaks, sfx subtle
+        env = np.convolve(np.abs(voice), np.ones(int(0.3 * SR)) / int(0.3 * SR), mode="same")
+        vduck = 1 - 0.55 * np.clip(env / (env.max() * 0.25 + 1e-9), 0, 1)
+        mix = 0.16 * music * duck * vduck + 0.22 * sfx + 1.0 * voice
+        mix = 0.95 * mix / (np.abs(mix).max() + 1e-9)
+    else:
+        mix = 0.40 * music * duck + 0.75 * sfx
+        mix = np.tanh(1.2 * mix) / np.tanh(1.2)
     mix = 0.89 * mix / (np.abs(mix).max() + 1e-9)
     # stereo: tiny width on music
     left = mix

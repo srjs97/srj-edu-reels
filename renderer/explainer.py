@@ -772,9 +772,225 @@ def V_homequiz(fr, v, tl, kind, ent, dur):
         paste(fr, txt("DISTANCE = 4 km", 44, DIST_C, shadow=kind == "dark"), W / 2, 1310, 1, clamp((tl - reveal - 0.4) / 0.3))
 
 
+# ---------------- energy diagrams (Potential vs Kinetic) ----------------
+PE_C = (255, 150, 30)     # potential = orange
+KE_C = (60, 150, 255)     # kinetic = blue
+TOT_C = (30, 190, 120)
+GROUND_Y = 1290
+CLIFF_TOP = 560
+CLIFF_X = 470
+
+
+def _ground(d, kind):
+    d.rectangle((0, GROUND_Y, W, GROUND_Y + 60), fill=(90, 170, 80, 255))
+    d.rectangle((0, GROUND_Y + 22, W, GROUND_Y + 60), fill=(120, 90, 60, 255))
+
+
+def _cliff(d):
+    pts = [(0, CLIFF_TOP + 10), (120, CLIFF_TOP - 10), (300, CLIFF_TOP), (CLIFF_X, CLIFF_TOP + 4),
+           (CLIFF_X + 20, CLIFF_TOP + 140), (CLIFF_X - 10, CLIFF_TOP + 330), (CLIFF_X + 30, CLIFF_TOP + 520), (CLIFF_X + 10, GROUND_Y), (0, GROUND_Y)]
+    d.polygon(pts, fill=(130, 105, 90, 255))
+    d.polygon([(0, CLIFF_TOP + 10), (120, CLIFF_TOP - 10), (300, CLIFF_TOP), (CLIFF_X, CLIFF_TOP + 4), (CLIFF_X, CLIFF_TOP + 30), (0, CLIFF_TOP + 34)],
+              fill=(95, 165, 85, 255))
+    for k, (x, y) in enumerate([(120, 760), (300, 900), (180, 1080), (360, 1180), (80, 1220)]):
+        d.line((x, y, x + 60, y + 18), fill=(105, 84, 72, 255), width=6)
+
+
+def _meter(fr, d, x, label, frac, c, kind, top=640, h=520, w=96):
+    d.rounded_rectangle((x - w / 2, top, x + w / 2, top + h), 20, fill=(255, 255, 255, 60 if kind == "dark" else 150),
+                        outline=ink(kind) + (120,), width=4)
+    hh = max(0, h * clamp(frac))
+    if hh > 14:
+        d.rounded_rectangle((x - w / 2 + 6, top + h - hh + 6, x + w / 2 - 6, top + h - 6), min(16, (hh - 12) / 2), fill=c + (255,))
+
+
+def V_cliff(fr, v, tl, kind, ent):
+    """stone on a cliff. mode: rest | fall | transform | heights."""
+    mode = v.get("mode", "rest")
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    _ground(d, kind)
+    R = 70
+    if mode == "heights":
+        cols = [(240, 1000), (540, 800), (840, 600)]   # x, top y
+        for i, (x, ty) in enumerate(cols):
+            e = ease_out((tl + ent - 0.25 * i) / 0.5)
+            top = GROUND_Y - (GROUND_Y - ty) * e
+            d.rounded_rectangle((x - 110, top, x + 110, GROUND_Y + 2), 18, fill=(130, 105, 90, 255))
+            d.rectangle((x - 110, top, x + 110, top + 22), fill=(95, 165, 85, 255))
+        fr.alpha_composite(lay)
+        for i, (x, ty) in enumerate(cols):
+            e = ease_out((tl + ent - 0.25 * i) / 0.5)
+            top = GROUND_Y - (GROUND_Y - ty) * e
+            a = clamp((tl + ent - 0.6 - 0.35 * i) / 0.3)
+            paste(fr, glow(60 + 25 * i, PE_C, 150), x, top - R + 10, a)
+            paste(fr, icon("rock:asteroid", 2 * R), x, top - R + 14, a)
+            paste(fr, pill(["PE", "MORE PE", "MAX PE"][i], PE_C, size=[34, 40, 46][i], padx=18), x, top - 2 * R - 40,
+                  back((tl + ent - 0.9 - 0.4 * i) / 0.4))
+        return
+    _cliff(d)
+    sx0, sy0 = CLIFF_X - 80, CLIFF_TOP - R + 12
+    x, y, p = sx0, sy0, 0.0
+    t0, T = v.get("at", 0.3), v.get("fallT", 1.6)
+    if mode in ("fall", "transform"):
+        u = clamp((tl + ent - t0) / T)
+        # tip over the edge (first 15%) then free fall: y ~ u^2
+        if u < 0.15:
+            x = sx0 + 150 * (u / 0.15)
+        else:
+            k = (u - 0.15) / 0.85
+            x = sx0 + 150 + 60 * k
+            y = sy0 + (GROUND_Y - R + 8 - sy0) * k * k
+            p = k
+    # height arrow
+    hx = 690 if (mode == "transform" or v.get("meters")) else 930
+    d.line((hx, y, hx, GROUND_Y - 6), fill=YEL + (255,), width=8)
+    d.polygon([(hx, y - 4), (hx - 18, y + 26), (hx + 18, y + 26)], fill=YEL + (255,))
+    d.line((hx - 30, GROUND_Y - 4, hx + 30, GROUND_Y - 4), fill=YEL + (255,), width=8)
+    if mode in ("fall", "transform") and p > 0.05:
+        for k in range(4):
+            yy = y - R - 30 - k * 46
+            if yy > sy0 - R:
+                d.line((x - 30 + k * 20, yy, x - 30 + k * 20, yy - 30 - 20 * p), fill=(255, 255, 255, int(200 * p)), width=5)
+    fr.alpha_composite(lay)
+    paste(fr, txt("h", 64, YEL, shadow=True), hx + 50, (y + GROUND_Y) / 2, 1, 1 if (y + 30 < GROUND_Y - 60) else 0)
+    gl = 1 - p
+    if gl > 0.05:
+        paste(fr, glow(int(R * 1.3), PE_C, int(170 * gl)), x, y, 1 + 0.06 * math.sin(tl * 5))
+    if p > 0.05:
+        paste(fr, glow(int(R * 1.3), KE_C, int(170 * p)), x, y)
+    paste(fr, icon("rock:asteroid", 2 * R), x, y, 1, rot=-200 * p if mode != "rest" else 0)
+    if p >= 0.999:
+        fr_d = ImageDraw.Draw(fr)
+        k = tl + ent - t0 - T
+        if k < 0.6:
+            for j in range(8):
+                a = j * math.pi / 7
+                rr = 40 + 160 * k
+                fr_d.ellipse((x + rr * math.cos(a) - 10, GROUND_Y - 10 - rr * math.sin(a) * 0.5 - 10,
+                              x + rr * math.cos(a) + 10, GROUND_Y - 10 - rr * math.sin(a) * 0.5 + 10), fill=(200, 180, 150, int(255 * (1 - k / 0.6))))
+    if mode == "rest" and v.get("label"):
+        paste(fr, pill(v["label"], PE_C, size=50), 700, sy0 + 40, back((tl + ent - 0.5) / 0.4) * (1 + 0.04 * math.sin(tl * 4)))
+    if mode == "fall" and v.get("label"):
+        paste(fr, pill(v["label"], RED, size=50), 700, 500, back((tl + ent - t0 - T) / 0.4))
+    if mode in ("transform", "gauges") or v.get("meters"):
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(lay)
+        names = v.get("meters", ["PE", "KE"])
+        if names[0] == "HEIGHT":
+            vals = [1 - p, math.sqrt(p)]
+        else:
+            vals = [1 - p, p]
+        mx = [800, 960]
+        cs = [PE_C, KE_C]
+        for i in range(2):
+            _meter(fr, d, mx[i], names[i], vals[i], cs[i], kind)
+        fr.alpha_composite(lay)
+        for i in range(2):
+            paste(fr, txt(names[i], 40 if len(names[i]) < 4 else 32, cs[i], shadow=kind == "dark"), mx[i], 1200)
+
+
+def V_roll(fr, v, tl, kind, ent):
+    """ball rolling across the floor with speed lines."""
+    fy = 1040
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.rounded_rectangle((40, fy + 10, W - 40, fy + 34), 12, fill=ink(kind) + (140,))
+    sp = v.get("speed", 520)
+    x = -150 + ((tl + ent) * sp) % (W + 300)
+    for k in range(5):
+        yy = fy - 160 + k * 55
+        L = 120 + 40 * (k % 2)
+        d.rounded_rectangle((x - 140 - L, yy - 6, x - 140, yy + 6), 6, fill=KE_C + (200,))
+    fr.alpha_composite(lay)
+    paste(fr, glow(110, KE_C, 140), x, fy - 115)
+    paste(fr, icon(v.get("icon", "⚽"), 230), x, fy - 115, 1, rot=-(tl + ent) * sp / 115 * 57.3)
+    paste(fr, pill(v.get("label", "MOTION = KINETIC ENERGY"), KE_C, size=48), W / 2, 640, back((tl + ent - 0.5) / 0.4))
+    paste(fr, txt("v", 70, YEL, shadow=True), W / 2, fy + 120, 1, clamp((tl + ent - 0.8) / 0.3))
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    a = clamp((tl + ent - 0.8) / 0.3)
+    _arrow(ImageDraw.Draw(lay), W / 2 + 50, fy + 120, W / 2 + 250, fy + 120, YEL + (int(255 * a),), w=12, head=36)
+    fr.alpha_composite(lay)
+
+
+def _formula_img(tokens, size):
+    k = ("formula", tuple((s, tuple(c)) for s, c in tokens), size)
+    if k in _tc:
+        return _tc[k]
+    f = fnt(size, False)
+    ws = [f.getlength(s) for s, _ in tokens]
+    w = int(sum(ws)) + 40
+    h = int(size * 1.5)
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    x = 20
+    for (s, c), wl in zip(tokens, ws):
+        d.text((x, h / 2), s, font=f, fill=tuple(c) + (255,), anchor="lm")
+        x += wl
+    _tc[k] = im
+    return im
+
+
+def V_formula(fr, v, tl, kind, ent):
+    """big formula on a white card + term rows that appear one by one (v['at'])."""
+    cw, chh = 960, 900
+    cy = 860
+    e = ease_out((tl + ent) / 0.4)
+    paste(fr, card(cw, chh), W / 2, cy + 40 * (1 - e), 1, e)
+    top = cy - chh / 2
+    paste(fr, pill(v.get("title", "FORMULA"), col(v.get("titleCol"), PE_C), size=44), W / 2, top + 20, back((tl + ent - 0.1) / 0.4))
+    toks = [(s, col(c, DARK_INK)) for s, c in v["tokens"]]
+    paste(fr, _formula_img(toks, v.get("size", 150)), W / 2, top + 210, back((tl + ent - 0.2) / 0.45))
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(lay).line((W / 2 - 400, top + 345, W / 2 + 400, top + 345), fill=(220, 220, 232, int(255 * e)), width=4)
+    fr.alpha_composite(lay)
+    ats = v.get("at", [0.8 + 0.8 * i for i in range(len(v["rows"]))])
+    for i, (sym, c, words) in enumerate(v["rows"]):
+        a = ease_out((tl + ent - ats[i]) / 0.35)
+        y = top + 440 + i * 140
+        c = col(c, DARK_INK)
+        paste(fr, txt(sym, 80, c), W / 2 - 330, y, back((tl + ent - ats[i]) / 0.4), a)
+        paste(fr, txt("=", 60, (150, 150, 170)), W / 2 - 220, y, 1, a)
+        tim = txt(words, 50, DARK_INK, maxw=560)
+        paste(fr, tim, W / 2 - 180 + tim.width / 2 + 30 * (1 - a), y, 1, a)
+
+
+def V_pendulum(fr, v, tl, kind, ent):
+    """ideal pendulum with live PE / KE / TOTAL bars."""
+    px, py, L = 360, 520, 420
+    th0 = math.radians(42)
+    period = v.get("period", 2.6)
+    th = th0 * math.cos(2 * math.pi * (tl + ent) / period)
+    pe = (1 - math.cos(th)) / (1 - math.cos(th0))
+    ke = 1 - pe
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    bx, by = px + L * math.sin(th), py + L * math.cos(th)
+    # swing arc
+    arc = [(px + L * math.sin(a), py + L * math.cos(a)) for a in np.linspace(-th0, th0, 40)]
+    d.line(arc, fill=ink(kind) + (70,), width=5)
+    d.rounded_rectangle((px - 140, py - 24, px + 140, py), 8, fill=ink(kind) + (200,))
+    d.line((px, py, bx, by), fill=ink(kind) + (255,), width=7)
+    fr.alpha_composite(lay)
+    paste(fr, glow(70, KE_C if ke > pe else PE_C, 150), bx, by)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.ellipse((bx - 58, by - 58, bx + 58, by + 58), fill=(180, 185, 200, 255), outline=WHITE + (255,), width=6)
+    d.ellipse((bx - 34, by - 40, bx - 6, by - 12), fill=(240, 240, 250, 200))
+    names, vals, cs = ["PE", "KE", "TOTAL"], [pe, ke, 1.0], [PE_C, KE_C, TOT_C]
+    xs = [770, 880, 990]
+    for i in range(3):
+        _meter(fr, d, xs[i], names[i], vals[i], cs[i], kind, top=560, h=600, w=84)
+    fr.alpha_composite(lay)
+    for i in range(3):
+        paste(fr, txt(names[i], 36 if i < 2 else 28, cs[i], shadow=kind == "dark"), xs[i], 1210)
+    paste(fr, pill(v.get("label", "TOTAL = CONSTANT"), TOT_C, size=46), W / 2, 1310, back((tl + ent - v.get("labelAt", 1.5)) / 0.4))
+
+
 VIS = {"hero": V_hero, "bars": V_bars, "particles": V_particles, "number": V_number, "scale": V_scale,
        "flow": V_flow, "table": V_table, "remember": V_remember, "outro": V_outro,
-       "path": V_path, "walk": V_walk, "sv": V_sv, "track": V_track}
+       "path": V_path, "walk": V_walk, "sv": V_sv, "track": V_track,
+       "cliff": V_cliff, "roll": V_roll, "formula": V_formula, "pendulum": V_pendulum}
 
 
 # ---------------- confetti ----------------
@@ -841,6 +1057,8 @@ for i, s in enumerate(SCENES):
         sfx.append(("riser", starts[i] - 0.4, 0.4))
     if vt == "outro":
         sfx.append(("ding", starts[i] + 0.1, 0.6))
+    for name, at, gain in s.get("sfx", []):
+        sfx.append((name, starts[i] + at, gain))
 
 
 def scene_at(t):
@@ -919,7 +1137,7 @@ def main():
     for k in range(int(DUR * FPS)):
         p.stdin.write(frame(k / FPS).tobytes())
     p.stdin.close(); p.wait()
-    json.dump({"duration": DUR, "drop": SCENES[0]["dur"], "seed": int(spec.get("topicNo", 0)), "sfx": sfx, "voice": spec.get("voice")}, open(sys.argv[3], "w"))
+    json.dump({"duration": DUR, "drop": SCENES[0]["dur"], "seed": int(spec.get("topicNo", 0)), "sfx": sfx, "voice": os.path.abspath(spec["voice"]) if spec.get("voice") else None}, open(sys.argv[3], "w"))
 
 
 if __name__ == "__main__":

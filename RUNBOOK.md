@@ -21,6 +21,17 @@ and YouTube for **SLOT IST the same day**. (The old 13:00 slot is switched off.)
 illustrated background. English names stay as the big titles (`thingA`/`thingB`) with the Malayalam word as
 `subA`/`subB`. Since 2026-11-25 the scenes are listed in the spec (explainer style, see step 4).
 
+## Voiceover reels (Suraj, 2026-11-26: he sends script + voiceover WAV; no automatic reels)
+
+- Save his WAV as `voice/NNN.wav` (wav files are git-ignored; keep his upload) and add `"voice": "voice/NNN.wav"` to the spec. The audio then uses his voice
+  as the main track with light music (no drums) and soft SFX under it; length follows the audio (can pass 60 s).
+- One scene per narration sentence. Find sentence ends with
+  `ffmpeg -i voice.wav -af silencedetect=noise=-35dB:d=0.25 -f null -` and match them to the script
+  (example: `specs/025x.json`, 17 scenes for 91.5 s). Captions = his Malayalam sentences, split with `capAt`.
+- Extra diagram types for physics: `cliff` (mode rest/fall/transform/heights, `meters`), `roll`, `formula`
+  (`tokens`, `rows`, `at`), `pendulum`. Per-scene `sfx: [[name, at, gain]]` adds sound effects.
+- Schedule for 19:00 IST the same day. Video file `reels/NNN_x.mp4`.
+
 ## Steps
 
 1. **Setup**: `apt-get install -y fonts-smc-manjari fonts-noto-core` (Manjari Bold font; PIL needs raqm, which is present).
