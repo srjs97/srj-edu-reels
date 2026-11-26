@@ -1,4 +1,4 @@
-"""Explainer-style 9:16 reel (no voice): one idea per scene, a big code-drawn diagram,
+"""Explainer-style 9:16 reel (optional voiceover via spec "voice"): one idea per scene, a big code-drawn diagram,
 an English heading on top and a Malayalam subtitle box at the bottom.
 usage: explainer.py spec.json out_silent.mp4 cues.json   (FRAMES=1,5.5 renders PNGs only)
 """
@@ -54,10 +54,14 @@ def is_ml(s):
     return any("ഀ" <= ch <= "ൿ" for ch in s)
 
 
+SYM_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"   # has arrows and ≤ ≥ that Noto Sans lacks
+
+
 def fnt(size, ml):
     k = (size, ml)
     if k not in _fonts:
-        _fonts[k] = ImageFont.truetype(ML_BOLD if ml else EN_BOLD, size, layout_engine=ImageFont.Layout.RAQM)
+        path = ML_BOLD if ml is True else SYM_BOLD if ml == "sym" else EN_BOLD
+        _fonts[k] = ImageFont.truetype(path, size, layout_engine=ImageFont.Layout.RAQM)
     return _fonts[k]
 
 
@@ -68,7 +72,7 @@ def txt(s, size, color, maxw=980, shadow=False, stroke=0, stroke_col=(0, 0, 0)):
     k = (s, size, tuple(color), maxw, shadow, stroke, tuple(stroke_col))
     if k in _tc:
         return _tc[k]
-    ml = is_ml(s)
+    ml = is_ml(s) or ("sym" if any(ch in "≤≥↑↗←→" for ch in s) else False)
     while True:
         f = fnt(size, ml)
         bb = f.getbbox(s, stroke_width=stroke)
@@ -565,8 +569,212 @@ def V_outro(fr, v, tl, kind, ent):
     paste(fr, pill("Share ചെയ്യൂ", (60, 130, 230), size=40), W * 0.7, 1230, back((tl + ent - 1.4) / 0.4))
 
 
+# ---------------- motion / physics diagrams ----------------
+def _arrow(d, x0, y0, x1, y1, c, w=14, head=36):
+    ang = math.atan2(y1 - y0, x1 - x0)
+    L = math.hypot(x1 - x0, y1 - y0)
+    if L < 2:
+        return
+    hb = min(head, L)
+    bx, by = x1 - hb * 0.8 * math.cos(ang), y1 - hb * 0.8 * math.sin(ang)
+    d.line((x0, y0, bx, by), fill=c, width=w)
+    pa = ang + math.pi * 0.82
+    pb = ang - math.pi * 0.82
+    d.polygon([(x1, y1), (x1 + hb * math.cos(pa), y1 + hb * math.sin(pa)), (x1 + hb * math.cos(pb), y1 + hb * math.sin(pb))], fill=c)
+
+
+def _polyline_upto(pts, p):
+    """return the polyline points covering fraction p of its length, and the tip point."""
+    seg = [math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) for i in range(len(pts) - 1)]
+    tot = sum(seg)
+    want = tot * clamp(p)
+    out = [pts[0]]
+    for i, L in enumerate(seg):
+        if want <= L:
+            f = want / L if L else 0
+            tip = (pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f)
+            out.append(tip)
+            return out, tip
+        want -= L
+        out.append(pts[i + 1])
+    return out, pts[-1]
+
+
+def _dot(d, x, y, r, c, outline=WHITE):
+    d.ellipse((x - r, y - r, x + r, y + r), fill=c + (255,), outline=outline + (255,), width=6)
+
+
+DIST_C = (255, 150, 30)    # distance = orange
+DISP_C = (60, 150, 255)    # displacement = blue
+
+# wiggly path from start to end
+_ws = []
+for k in range(41):
+    u = k / 40
+    _ws.append((180 + 720 * u, 900 + 190 * math.sin(u * math.pi * 2.6) - 120 * u))
+WIGGLE = _ws
+
+
+def V_path(fr, v, tl, kind, ent):
+    """wiggly route A->B. mode 'distance' traces the route; mode 'displacement' greys it and shoots the straight arrow."""
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    mode = v.get("mode", "distance")
+    pts = WIGGLE
+    a, b = pts[0], pts[-1]
+    if mode == "distance":
+        p = ease_out((tl + ent - 0.3) / 2.2)
+        d.line(pts, fill=ink(kind) + (60,), width=10, joint="curve")
+        part, tip = _polyline_upto(pts, p)
+        if len(part) > 1:
+            d.line(part, fill=DIST_C + (255,), width=16, joint="curve")
+        _dot(d, *a, 26, GREEN)
+        _dot(d, *b, 26, RED)
+        fr.alpha_composite(lay)
+        paste(fr, icon("🚶", 120), tip[0], tip[1] - 80, 1)
+        paste(fr, pill(v.get("label", "TOTAL PATH LENGTH"), DIST_C, size=46), W / 2, 1210, back((tl + ent - 2.0) / 0.4))
+    else:
+        d.line(pts, fill=DIST_C + (110,), width=12, joint="curve")
+        _dot(d, *a, 26, GREEN)
+        _dot(d, *b, 26, RED)
+        p = ease_out((tl + ent - 0.4) / 0.9)
+        _arrow(d, a[0], a[1], a[0] + (b[0] - a[0]) * p, a[1] + (b[1] - a[1]) * p, DISP_C + (255,), w=18, head=48)
+        fr.alpha_composite(lay)
+        paste(fr, pill(v.get("label", "SHORTEST STRAIGHT LINE"), DISP_C, size=46), W / 2, 1210, back((tl + ent - 1.3) / 0.4))
+        paste(fr, pill("+ DIRECTION", YEL, DARK_INK, size=40), W / 2, 1310, back((tl + ent - 1.8) / 0.4))
+    paste(fr, txt("START", 36, GREEN, shadow=kind == "dark"), a[0], a[1] + 60, 1, ease_out((tl + ent) / 0.3))
+    paste(fr, txt("END", 36, RED, shadow=kind == "dark"), b[0], b[1] - 60, 1, ease_out((tl + ent) / 0.3))
+
+
+def V_walk(fr, v, tl, kind, ent):
+    """4 m east then 3 m north on a grid; 'result' adds the 5 m displacement arrow + chips."""
+    u = 150                         # px per metre
+    ox, oy = W / 2 - 2 * u, 1060    # start point
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    gc = ink(kind) + (40,)
+    for i in range(-1, 6):
+        d.line((ox + i * u, oy - 4 * u, ox + i * u, oy + u), fill=gc, width=3)
+    for j in range(-1, 5):
+        d.line((ox - u, oy - j * u, ox + 5 * u, oy - j * u), fill=gc, width=3)
+    res = v.get("result", False)
+    e1 = 1.0 if res else ease_out((tl + ent - 0.3) / 1.3)
+    e2 = 1.0 if res else ease_out((tl + ent - 2.0) / 1.0)
+    _arrow(d, ox, oy, ox + 4 * u * e1, oy, DIST_C + (255,), w=16, head=42)
+    if e2 > 0.01:
+        _arrow(d, ox + 4 * u, oy, ox + 4 * u, oy - 3 * u * e2, DIST_C + (255,), w=16, head=42)
+    if res:
+        p = ease_out((tl + ent - 0.4) / 0.8)
+        _arrow(d, ox, oy, ox + 4 * u * p, oy - 3 * u * p, DISP_C + (255,), w=18, head=48)
+    _dot(d, ox, oy, 22, GREEN)
+    if e2 >= 0.99 or res:
+        _dot(d, ox + 4 * u, oy - 3 * u, 22, RED)
+    fr.alpha_composite(lay)
+    paste(fr, txt("4 m EAST", 46, DIST_C, shadow=kind == "dark"), ox + 2 * u, oy + 60, 1, clamp((tl + ent - 0.8) / 0.3) if not res else 1)
+    paste(fr, txt("3 m", 46, DIST_C, shadow=kind == "dark"), ox + 4 * u + 80, oy - 1.6 * u, 1, clamp((tl + ent - 2.4) / 0.3) if not res else 1)
+    paste(fr, txt("NORTH", 34, DIST_C, shadow=kind == "dark"), ox + 4 * u + 80, oy - 1.6 * u + 50, 1, clamp((tl + ent - 2.4) / 0.3) if not res else 1)
+    paste(fr, txt("N ↑", 40, ink(kind)), ox - 0.6 * u, oy - 3.6 * u, 1, ease_out((tl + ent) / 0.3))
+    if res:
+        paste(fr, txt("5 m", 60, DISP_C, shadow=kind == "dark"), ox + 1.7 * u, oy - 2.1 * u, 1, clamp((tl + ent - 1.0) / 0.3))
+        paste(fr, pill("DISTANCE = 4 + 3 = 7 m", DIST_C, size=44), W / 2, oy + 175, back((tl + ent - 0.2) / 0.4))
+        paste(fr, pill("DISPLACEMENT = 5 m", DISP_C, size=44), W / 2, oy + 175 + 0 if False else oy + 280, back((tl + ent - v.get("dispAt", 2.2)) / 0.4))
+
+
+def V_sv(fr, v, tl, kind, ent):
+    """scalar vs vector cards."""
+    cw, ch = 460, 620
+    xs = [W * 0.27, W * 0.73]
+    cy = 830
+    data = [("DISTANCE", "SCALAR", "SIZE ONLY", DIST_C), ("DISPLACEMENT", "VECTOR", "SIZE + DIRECTION", DISP_C)]
+    for i, (nm, kindtxt, sub, c) in enumerate(data):
+        e = ease_out((tl + ent - v.get("at", [0, 2.6])[i]) / 0.4)
+        if e <= 0.01:
+            continue
+        y = cy + 60 * (1 - e)
+        paste(fr, card(cw, ch), xs[i], y, 1, e)
+        paste(fr, txt(nm, 42, c, maxw=420), xs[i], y - 230, 1, e)
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(lay)
+        x, yy = xs[i], y - 50
+        if i == 0:
+            # plain measuring bar (no arrow head)
+            d.rounded_rectangle((x - 160, yy - 14, x + 160, yy + 14), 12, fill=c + (int(255 * e),))
+            for k in range(9):
+                d.line((x - 160 + k * 40, yy - 34, x - 160 + k * 40, yy - 14), fill=DARK_INK + (int(200 * e),), width=4)
+            d.text((x, yy + 60), "5 m", fill=DARK_INK + (int(255 * e),), font=fnt(48, False), anchor="mm")
+        else:
+            ang = -0.6 + 0.15 * math.sin(tl * 2)
+            L = 170
+            _arrow(d, x - L * math.cos(ang), yy - L * math.sin(ang), x + L * math.cos(ang), yy + L * math.sin(ang), c + (int(255 * e),), w=22, head=56)
+            d.text((x, yy + 110), "5 m ↗", fill=DARK_INK + (int(255 * e),), font=fnt(48, "sym"), anchor="mm")
+        fr.alpha_composite(lay)
+        paste(fr, pill(kindtxt, c, size=54), xs[i], y + 150, back((tl + ent - v.get("at", [0, 2.6])[i] - 0.3) / 0.4))
+        paste(fr, txt(sub, 34, (110, 110, 140), maxw=420), xs[i], y + 245, 1, e)
+
+
+TRACK = []
+for k in range(121):
+    a = k / 120 * 2 * math.pi
+    # stadium-ish oval, start at bottom centre, run anticlockwise on screen
+    TRACK.append((W / 2 + 330 * math.sin(a), 860 + 300 * math.cos(a)))
+
+
+def V_track(fr, v, tl, kind, ent):
+    """running track: runner does one lap; distance counter climbs to 400 m, displacement shows 0."""
+    lap0, lapT = v.get("lap", [0.3, 3.2])
+    p = ease_out((tl + ent - lap0) / lapT) if not v.get("done") else 1.0
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.ellipse((W / 2 - 400, 860 - 370, W / 2 + 400, 860 + 370), fill=(200, 90, 70, 255))
+    d.ellipse((W / 2 - 260, 860 - 230, W / 2 + 260, 860 + 230), fill=(60, 160, 90, 255))
+    d.line(TRACK, fill=(255, 255, 255, 120), width=4)
+    part, tip = _polyline_upto(TRACK, p)
+    if len(part) > 1:
+        d.line(part, fill=DIST_C + (255,), width=14, joint="curve")
+    sx, sy = TRACK[0]
+    d.line((sx, sy - 70, sx, sy + 70), fill=(255, 255, 255, 255), width=10)
+    fr.alpha_composite(lay)
+    paste(fr, icon("🏃", 130), tip[0], tip[1] - 40, 1)
+    paste(fr, pill(f"DISTANCE  {int(round(400 * p))} m", DIST_C, size=46), W / 2, 790, back((tl + ent - 0.2) / 0.4))
+    if p >= 0.999:
+        k = tl + ent - lap0 - lapT if not v.get("done") else tl + ent
+        paste(fr, pill("DISPLACEMENT  0 m", DISP_C, size=46), W / 2, 900, back((k - v.get("dispDelay", 0.2)) / 0.4) * (1 + 0.05 * abs(math.sin(tl * 4))))
+
+
+def V_homequiz(fr, v, tl, kind, ent, dur):
+    """home -> school 2 km and back; countdown then reveal 0 km."""
+    hx, sx, y = 220, 860, 900
+    reveal = v.get("reveal", dur - 2.4)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.rounded_rectangle((hx, y + 70, sx, y + 100), 14, fill=ink(kind) + (70,))
+    go = ease_out((tl + ent - 0.8) / 1.6)
+    back_ = ease_out((tl + ent - 2.6) / 1.6)
+    if go > 0.01:
+        _arrow(d, hx + 60, y - 120, hx + 60 + (sx - hx - 120) * go, y - 120, DIST_C + (255,), w=12, head=34)
+    if back_ > 0.01:
+        _arrow(d, sx - 60, y - 40, sx - 60 - (sx - hx - 120) * back_, y - 40, DIST_C + (255,), w=12, head=34)
+    fr.alpha_composite(lay)
+    paste(fr, icon("🏠", 200), hx, y + 10, back((tl + ent) / 0.4))
+    paste(fr, icon("🏫", 200), sx, y + 10, back((tl + ent - 0.2) / 0.4))
+    paste(fr, pill("2 km", ORANGE, size=44), W / 2, y + 160, back((tl + ent - 0.5) / 0.4))
+    paste(fr, txt("DISPLACEMENT = ?", 70, ink(kind), shadow=kind == "dark"), W / 2, 560, back((tl + ent - 0.1) / 0.4))
+    cd = v.get("countdown", 3)
+    if tl < reveal:
+        left = reveal - tl
+        if left <= cd:
+            frac = left - math.floor(left)
+            paste(fr, pill(str(int(math.ceil(left))), RED, size=90, padx=40), W / 2, 1180, 1 + 0.25 * frac)
+        elif tl > 4.4:
+            paste(fr, pill("COMMENT ചെയ്യൂ!", ORANGE, size=44), W / 2, 1180, back((tl - 4.4) / 0.4))
+    else:
+        paste(fr, pill("ANSWER: 0 km", GREEN, size=70, padx=44), W / 2, 1190, back((tl - reveal) / 0.35))
+        paste(fr, txt("DISTANCE = 4 km", 44, DIST_C, shadow=kind == "dark"), W / 2, 1310, 1, clamp((tl - reveal - 0.4) / 0.3))
+
+
 VIS = {"hero": V_hero, "bars": V_bars, "particles": V_particles, "number": V_number, "scale": V_scale,
-       "flow": V_flow, "table": V_table, "remember": V_remember, "outro": V_outro}
+       "flow": V_flow, "table": V_table, "remember": V_remember, "outro": V_outro,
+       "path": V_path, "walk": V_walk, "sv": V_sv, "track": V_track}
 
 
 # ---------------- confetti ----------------
@@ -621,9 +829,9 @@ for i, s in enumerate(SCENES):
         if i or j:
             sfx.append(("pop_hi", starts[i] + at[j] + 0.02, 0.22))
     vt = s.get("visual", {}).get("type")
-    if vt == "quiz":
+    if vt in ("quiz", "homequiz"):
         cd = s["visual"].get("countdown", 3)
-        rv = starts[i] + s["dur"] - 2.4
+        rv = starts[i] + s["visual"].get("reveal", s["dur"] - 2.4)
         for k in range(cd):
             sfx.append(("tick", rv - cd + k, 0.7))
         sfx.append(("ding", rv, 0.9))
@@ -657,6 +865,9 @@ def draw_scene(fr, i, tl, kind):
         if v["type"] == "quiz":
             V_quiz(fr, v, tl, kind, ent, s["dur"])
             confetti(fr, tl - (s["dur"] - 2.4), 900)
+        elif v["type"] == "homequiz":
+            V_homequiz(fr, v, tl, kind, ent, s["dur"])
+            confetti(fr, tl - v.get("reveal", s["dur"] - 2.4), 900)
         else:
             VIS[v["type"]](fr, v, tl, kind, ent)
         if v["type"] == "outro":
@@ -708,7 +919,7 @@ def main():
     for k in range(int(DUR * FPS)):
         p.stdin.write(frame(k / FPS).tobytes())
     p.stdin.close(); p.wait()
-    json.dump({"duration": DUR, "drop": SCENES[0]["dur"], "seed": int(spec.get("topicNo", 0)), "sfx": sfx}, open(sys.argv[3], "w"))
+    json.dump({"duration": DUR, "drop": SCENES[0]["dur"], "seed": int(spec.get("topicNo", 0)), "sfx": sfx, "voice": spec.get("voice")}, open(sys.argv[3], "w"))
 
 
 if __name__ == "__main__":

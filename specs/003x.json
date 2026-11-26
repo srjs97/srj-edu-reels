@@ -1,0 +1,211 @@
+{
+ "style": "explainer",
+ "topicNo": 3,
+ "thingA": "Distance",
+ "thingB": "Displacement",
+ "colA": [
+  255,
+  150,
+  30
+ ],
+ "colB": [
+  60,
+  150,
+  255
+ ],
+ "scenes": [
+  {
+   "dur": 6,
+   "bg": "dark",
+   "head": "DISTANCE vs DISPLACEMENT",
+   "visual": {
+    "type": "track",
+    "lap": [
+     0.0,
+     3.6
+    ],
+    "dispDelay": 0.3
+   },
+   "captions": [
+    "**400 മീറ്റർ** ഓടി…",
+    "പക്ഷേ ഫിസിക്സ് പറയുന്നു: **ഒട്ടും നീങ്ങിയിട്ടില്ല!**"
+   ]
+  },
+  {
+   "dur": 5,
+   "bg": "light",
+   "head": "TWO DIFFERENT IDEAS",
+   "visual": {
+    "type": "hero",
+    "vs": true,
+    "items": [
+     {
+      "icon": "👣",
+      "name": "DISTANCE",
+      "glow": [
+       255,
+       190,
+       120
+      ]
+     },
+     {
+      "icon": "➡️",
+      "name": "DISPLACEMENT",
+      "glow": [
+       150,
+       200,
+       255
+      ]
+     }
+    ]
+   },
+   "captions": [
+    "**എങ്ങനെ?**",
+    "**Distance**-ഉം **Displacement**-ഉം തമ്മിലുള്ള വ്യത്യാസം"
+   ]
+  },
+  {
+   "dur": 4.5,
+   "bg": "dark",
+   "head": "DISTANCE",
+   "headCol": [
+    255,
+    150,
+    30
+   ],
+   "visual": {
+    "type": "path",
+    "mode": "distance"
+   },
+   "captions": [
+    "സഞ്ചരിച്ച വഴിയുടെ **ആകെ നീളം**"
+   ]
+  },
+  {
+   "dur": 6,
+   "bg": "light",
+   "head": "DISPLACEMENT",
+   "headCol": [
+    40,
+    120,
+    220
+   ],
+   "visual": {
+    "type": "path",
+    "mode": "displacement"
+   },
+   "captions": [
+    "തുടക്കം മുതൽ അവസാനം വരെ **ഏറ്റവും ചെറിയ നേർരേഖ**",
+    "**ദിശയോടു കൂടി!**"
+   ]
+  },
+  {
+   "dur": 5,
+   "bg": "dark",
+   "head": "EXAMPLE",
+   "visual": {
+    "type": "walk"
+   },
+   "captions": [
+    "**4 m കിഴക്കോട്ട്**",
+    "പിന്നെ **3 m വടക്കോട്ട്**"
+   ]
+  },
+  {
+   "dur": 5.5,
+   "bg": "light",
+   "head": "7 m OR 5 m?",
+   "visual": {
+    "type": "walk",
+    "result": true,
+    "dispAt": 2.6
+   },
+   "captions": [
+    "Distance = **4 + 3 = 7 m**",
+    "Displacement = വെറും **5 m!**"
+   ]
+  },
+  {
+   "dur": 6.5,
+   "bg": "dark",
+   "head": "SCALAR vs VECTOR",
+   "visual": {
+    "type": "sv",
+    "at": [
+     0,
+     3.4
+    ]
+   },
+   "captions": [
+    "Distance: **വലിപ്പം മാത്രം** = Scalar",
+    "Displacement: **വലിപ്പം + ദിശ** = Vector"
+   ]
+  },
+  {
+   "dur": 7,
+   "bg": "light",
+   "head": "ONE FULL LAP",
+   "visual": {
+    "type": "track",
+    "lap": [
+     0.2,
+     3.0
+    ],
+    "dispDelay": 1.0
+   },
+   "captions": [
+    "400 m ട്രാക്കിൽ **ഒരു റൗണ്ട്**",
+    "തുടങ്ങിയിടത്ത് തിരിച്ചെത്തി, Displacement **പൂജ്യം!**"
+   ]
+  },
+  {
+   "dur": 4,
+   "bg": "dark",
+   "visual": {
+    "type": "remember",
+    "text": "DISPLACEMENT ≤ DISTANCE",
+    "tag": "KEY IDEA"
+   },
+   "captions": [
+    "Displacement ഒരിക്കലും Distance-നേക്കാൾ **കൂടില്ല**"
+   ]
+  },
+  {
+   "dur": 8,
+   "bg": "light",
+   "head": "QUIZ TIME",
+   "headStyle": "pill",
+   "headCol": [
+    240,
+    70,
+    80
+   ],
+   "visual": {
+    "type": "homequiz",
+    "countdown": 3,
+    "reveal": 5.6
+   },
+   "capAt": [
+    0,
+    2.8,
+    5.6
+   ],
+   "captions": [
+    "വീട്ടിൽ നിന്ന് **2 km** അകലെ സ്കൂൾ, പോയി തിരിച്ചു വന്നു",
+    "Displacement എത്ര? **കമന്റ് ചെയ്യൂ!**",
+    "ഉത്തരം: **0 km** (തുടങ്ങിയിടത്ത് തന്നെ!)"
+   ]
+  },
+  {
+   "dur": 4.5,
+   "bg": "dark",
+   "visual": {
+    "type": "outro"
+   },
+   "captions": [
+    "അടുത്തത്: **Speed vs Velocity**",
+    "**SRJ EDU APP** ഫോളോ ചെയ്യൂ!"
+   ]
+  }
+ ]
+}
