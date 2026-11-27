@@ -77,7 +77,7 @@ illustrated background. English names stay as the big titles (`thingA`/`thingB`)
    `dueAt: <today>T<SLOT>:00+05:30`, asset `{ video: { url: <raw URL> } }`:
    - Instagram: `metadata.instagram = { type: "reel", shouldShareToFeed: true }`
    - Facebook: `metadata.facebook = { type: "reel" }`
-   - YouTube: `metadata.youtube = { type: "short", title: "<Thing A> vs <Thing B> | <Malayalam hook> #shorts", categoryId: "27", madeForKids: false }` (title under 100 characters)
+   - YouTube: `metadata.youtube = { type: "short", title: "<Thing A> vs <Thing B> | <Malayalam hook> #shorts", categoryId: "28" (Science & Technology, Suraj 2026-11-26), madeForKids: false }. Buffer has no YouTube tags field: put keywords + hashtags in the description` (title under 100 characters)
    - Caption (`text`). Engagement style (Suraj, 2026-11-25: reach matters). Instagram and Facebook:
      ```
      <hook_banner from the spec> 😳 <Thing A> ഉം <Thing B> ഉം ഒന്നാണോ?
