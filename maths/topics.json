@@ -1,0 +1,455 @@
+{
+ "rules": "One topic per day, never reused. status: '' = not yet made, 'scheduled YYYY-MM-DD' or 'posted ...' = used.",
+ "topics": [
+  {
+   "n": 1,
+   "slug": "odd_squares",
+   "title": "Odd numbers secretly build squares",
+   "fact": "1+3+5+...+(2n-1) = n^2; 1+3+...+99 = 2500",
+   "hook": "Add 1+3+5+...+99 in 3 seconds?",
+   "wow": "50x50 square of 50 L-shapes = 2500",
+   "ending": "What do 2+4+6+... build? (n(n+1) rectangles)",
+   "status": ""
+  },
+  {
+   "n": 2,
+   "slug": "gauss_staircase",
+   "title": "Gauss's 1 to 100 trick",
+   "fact": "1+2+...+n = n(n+1)/2; 1+...+100 = 5050",
+   "hook": "Add 1 to 100 in 10 seconds?",
+   "wow": "Two staircases make an n x (n+1) rectangle",
+   "ending": "What is 1+2+...+1000?",
+   "status": ""
+  },
+  {
+   "n": 3,
+   "slug": "pythagoras_rearrange",
+   "title": "Pythagoras without algebra",
+   "fact": "a^2+b^2=c^2 via rearranging 4 right triangles inside an (a+b) square",
+   "hook": "Why does 3,4,5 make a right angle?",
+   "wow": "Same 4 triangles, two arrangements: leftover area c^2 = a^2+b^2",
+   "ending": "Does 5,12,13 work?",
+   "status": ""
+  },
+  {
+   "n": 4,
+   "slug": "triangle_180",
+   "title": "Every triangle hides a straight line",
+   "fact": "Interior angles of any triangle sum to 180 degrees",
+   "hook": "Draw ANY triangle. Its angles always add to the same number.",
+   "wow": "Tear off 3 corners, they form a straight line",
+   "ending": "What do the angles of a quadrilateral add to? (360)",
+   "status": ""
+  },
+  {
+   "n": 5,
+   "slug": "circle_area",
+   "title": "Why the circle area is pi r squared",
+   "fact": "Slice a circle into wedges, rearrange to a near-rectangle r by pi r",
+   "hook": "Where does pi r^2 come from?",
+   "wow": "Wedges straighten into a rectangle as slices -> infinity",
+   "ending": "Circumference is 2 pi r. Why does area lose the 2?",
+   "status": ""
+  },
+  {
+   "n": 6,
+   "slug": "point_nine_repeating",
+   "title": "0.999... equals 1",
+   "fact": "1/3 = 0.333...; times 3 gives 0.999... = 1; also 1 - 0.999... has no gap",
+   "hook": "Is 0.999... smaller than 1?",
+   "wow": "Number line zoom: no number fits between them",
+   "ending": "Is 0.4999... equal to 0.5?",
+   "status": ""
+  },
+  {
+   "n": 7,
+   "slug": "halves_to_one",
+   "title": "Infinite halves fit in one square",
+   "fact": "1/2+1/4+1/8+... = 1",
+   "hook": "Can infinitely many pieces add up to just 1?",
+   "wow": "Square fills with halving rectangles",
+   "ending": "What is 1/3+1/9+1/27+...? (1/2)",
+   "status": ""
+  },
+  {
+   "n": 8,
+   "slug": "fibonacci_golden",
+   "title": "Fibonacci squares make a golden spiral",
+   "fact": "Ratios of consecutive Fibonacci numbers approach phi = 1.6180339...",
+   "hook": "1,1,2,3,5,8... what's hiding in these numbers?",
+   "wow": "Ratio graph converges to 1.618...",
+   "ending": "What is 1/phi? (phi - 1 = 0.618...)",
+   "status": ""
+  },
+  {
+   "n": 9,
+   "slug": "exterior_360",
+   "title": "Walk around any polygon: you turn 360 degrees",
+   "fact": "Sum of exterior angles of a convex polygon = 360",
+   "hook": "Turn at every corner of a shape. How much did you turn?",
+   "wow": "Polygon shrinks to a point; angles become a full turn",
+   "ending": "Interior angles of a hexagon? (720)",
+   "status": ""
+  },
+  {
+   "n": 10,
+   "slug": "square_of_sum",
+   "title": "(a+b)^2 is not a^2+b^2",
+   "fact": "(a+b)^2 = a^2 + 2ab + b^2 area model",
+   "hook": "Is (a+b)^2 equal to a^2+b^2?",
+   "wow": "Two missing ab rectangles appear",
+   "ending": "What is (a-b)^2 as a picture?",
+   "status": ""
+  },
+  {
+   "n": 11,
+   "slug": "difference_of_squares",
+   "title": "Cut a square, get a rectangle",
+   "fact": "a^2 - b^2 = (a+b)(a-b); 51x49 = 2500-1 = 2499",
+   "hook": "Multiply 51 x 49 in your head?",
+   "wow": "Cut-and-slide makes (a+b) x (a-b)",
+   "ending": "What is 102 x 98? (9996)",
+   "status": ""
+  },
+  {
+   "n": 12,
+   "slug": "pascal_powers2",
+   "title": "Pascal's triangle adds to powers of 2",
+   "fact": "Row n sums to 2^n; entries are binomial coefficients",
+   "hook": "Add every number in a row of this triangle...",
+   "wow": "Row sums 1,2,4,8,16,...",
+   "ending": "Which row sums to 1024? (row 10)",
+   "status": ""
+  },
+  {
+   "n": 13,
+   "slug": "unit_circle_sine",
+   "title": "Where the sine wave comes from",
+   "fact": "A point on the unit circle; its height over angle traces sin(theta)",
+   "hook": "Why does sine look like a wave?",
+   "wow": "Circle unrolls into the sine curve; cosine is the same wave shifted 90 deg",
+   "ending": "What does the x-coordinate trace?",
+   "status": ""
+  },
+  {
+   "n": 14,
+   "slug": "monty_hall",
+   "title": "Monty Hall: switching wins 2/3",
+   "fact": "Switching wins with probability 2/3",
+   "hook": "3 doors, 1 car. Should you switch?",
+   "wow": "Simulation of many games converges to 66.7%",
+   "ending": "With 100 doors, would you switch?",
+   "status": ""
+  },
+  {
+   "n": 15,
+   "slug": "birthday_paradox",
+   "title": "23 people, 50% chance of a shared birthday",
+   "fact": "P(shared) for 23 people = 50.7% (365 days, uniform)",
+   "hook": "How many people for a 50% birthday match?",
+   "wow": "Pair count 253 grows fast; curve crosses 50% at 23",
+   "ending": "At 70 people? (99.9%)",
+   "status": ""
+  },
+  {
+   "n": 16,
+   "slug": "monte_carlo_pi",
+   "title": "Find pi by throwing random dots",
+   "fact": "Fraction of random points in quarter circle -> pi/4",
+   "hook": "Can random dots calculate pi?",
+   "wow": "Estimate converges toward 3.14159...",
+   "ending": "How many dots for 2 correct decimals?",
+   "status": ""
+  },
+  {
+   "n": 17,
+   "slug": "sieve_primes",
+   "title": "The sieve that catches primes",
+   "fact": "Sieve of Eratosthenes up to 100: 25 primes",
+   "hook": "How do you find every prime below 100?",
+   "wow": "Multiples fall away, 25 primes remain",
+   "ending": "Is 1 a prime? (no)",
+   "status": ""
+  },
+  {
+   "n": 18,
+   "slug": "divisible_by_9",
+   "title": "The digit-sum test for 9",
+   "fact": "A number is divisible by 9 iff its digit sum is; 10 = 9+1",
+   "hook": "Is 738,261 divisible by 9 without dividing?",
+   "wow": "10^k leaves remainder 1 when divided by 9",
+   "ending": "Does the same work for 3? (yes)",
+   "status": ""
+  },
+  {
+   "n": 19,
+   "slug": "divide_by_zero",
+   "title": "Why you can't divide by zero",
+   "fact": "1/x grows without bound as x->0+ and -> -infinity as x->0-; no single value",
+   "hook": "What is 1 divided by 0?",
+   "wow": "Graph of 1/x splits in two directions",
+   "ending": "What about 0/0?",
+   "status": ""
+  },
+  {
+   "n": 20,
+   "slug": "triangle_area_half",
+   "title": "Why a triangle is half base x height",
+   "fact": "Two copies form a parallelogram of area bh",
+   "hook": "Why the 1/2 in triangle area?",
+   "wow": "Copy, rotate, join: parallelogram -> rectangle",
+   "ending": "Area of a trapezium?",
+   "status": ""
+  },
+  {
+   "n": 21,
+   "slug": "cone_third",
+   "title": "A cone is exactly 1/3 of a cylinder",
+   "fact": "V_cone = (1/3) pi r^2 h",
+   "hook": "How many cones fill a cylinder?",
+   "wow": "Three cones pour into one cylinder",
+   "ending": "What fraction of a cube is a square pyramid? (1/3)",
+   "status": ""
+  },
+  {
+   "n": 22,
+   "slug": "polygon_interior",
+   "title": "Interior angles of any polygon",
+   "fact": "Sum = (n-2) x 180 via triangulation from one vertex",
+   "hook": "Angles in a 10-sided shape add to?",
+   "wow": "Triangles fan out from one corner",
+   "ending": "For 20 sides? (3240)",
+   "status": ""
+  },
+  {
+   "n": 23,
+   "slug": "compound_e",
+   "title": "Where e = 2.718 comes from",
+   "fact": "(1+1/n)^n -> e = 2.71828... as compounding gets more frequent",
+   "hook": "100% interest, compounded forever: do you get infinite money?",
+   "wow": "Values approach 2.71828 and stop",
+   "ending": "What is (1+1/n)^(2n) heading to? (e^2)",
+   "status": ""
+  },
+  {
+   "n": 24,
+   "slug": "euler_identity",
+   "title": "e^(i pi) + 1 = 0 as a rotation",
+   "fact": "e^(i theta) = cos theta + i sin theta; theta = pi gives -1",
+   "hook": "How can e, i, pi, 1 and 0 fit in one equation?",
+   "wow": "Spinning point lands on -1",
+   "ending": "What is e^(i pi/2)? (i)",
+   "status": ""
+  },
+  {
+   "n": 25,
+   "slug": "repunit_squares",
+   "title": "11 x 11, 111 x 111, ... a palindrome pyramid",
+   "fact": "11^2=121, 111^2=12321, ..., 111111111^2=12345678987654321",
+   "hook": "What is 111,111,111 squared?",
+   "wow": "The pattern climbs to 9 and comes back",
+   "ending": "What breaks at 1111111111^2? (carries)",
+   "status": ""
+  },
+  {
+   "n": 26,
+   "slug": "times_eleven",
+   "title": "Multiply by 11 in one second",
+   "fact": "For 2-digit ab: a (a+b) b with carry; 72x11=792, 85x11=935",
+   "hook": "Can you do 72 x 11 instantly?",
+   "wow": "Digit sliding animation",
+   "ending": "What is 99 x 11? (1089)",
+   "status": ""
+  },
+  {
+   "n": 27,
+   "slug": "times_table_cardioid",
+   "title": "A times table draws a heart",
+   "fact": "Connect k to 2k mod N on a circle: cardioid",
+   "hook": "What shape hides in the 2 times table?",
+   "wow": "Multiplier 2 -> cardioid, 3 -> nephroid",
+   "ending": "What shape does x 4 draw?",
+   "status": ""
+  },
+  {
+   "n": 28,
+   "slug": "koch_snowflake",
+   "title": "Infinite perimeter, finite area",
+   "fact": "Koch snowflake perimeter x4/3 each step -> infinity; area -> 8/5 of original triangle",
+   "hook": "Can a shape have an infinite edge but fit on paper?",
+   "wow": "Perimeter counter runs away while area settles",
+   "ending": "Can you draw a curve that fills a square?",
+   "status": ""
+  },
+  {
+   "n": 29,
+   "slug": "chaos_game",
+   "title": "Random dots draw a perfect fractal",
+   "fact": "Chaos game with 3 vertices, jump halfway -> Sierpinski triangle",
+   "hook": "Roll a die, jump halfway... 10,000 times",
+   "wow": "Order emerges: Sierpinski triangle",
+   "ending": "What if you jump 2/3 of the way?",
+   "status": ""
+  },
+  {
+   "n": 30,
+   "slug": "archimedes_pi",
+   "title": "How Archimedes trapped pi",
+   "fact": "Inscribed/circumscribed 96-gons give 3 10/71 < pi < 3 1/7",
+   "hook": "How did people find pi without calculators?",
+   "wow": "Polygons squeeze the circle",
+   "ending": "How many sides for pi = 3.14159?",
+   "status": ""
+  },
+  {
+   "n": 31,
+   "slug": "handshakes",
+   "title": "How many handshakes in a room?",
+   "fact": "n people: n(n-1)/2 handshakes; 10 people = 45",
+   "hook": "10 people shake hands once each. How many handshakes?",
+   "wow": "Graph edges counted as pairs",
+   "ending": "How many for 100 people? (4950)",
+   "status": ""
+  },
+  {
+   "n": 32,
+   "slug": "thales_semicircle",
+   "title": "Every angle in a semicircle is 90 degrees",
+   "fact": "Thales: angle subtended by a diameter is a right angle",
+   "hook": "Move this point anywhere on the circle...",
+   "wow": "Angle stays 90 deg; isosceles triangles prove it",
+   "ending": "What if the point is inside the circle? (angle > 90)",
+   "status": ""
+  },
+  {
+   "n": 33,
+   "slug": "paper_fold_moon",
+   "title": "Fold paper 42 times to reach the Moon",
+   "fact": "0.1 mm x 2^42 = 439,804 km > Moon distance 384,400 km (on average)",
+   "hook": "How many folds to reach the Moon?",
+   "wow": "Height counter overtakes the Moon at fold 42",
+   "ending": "How many folds to reach the Sun? (about 51)",
+   "status": ""
+  },
+  {
+   "n": 34,
+   "slug": "harmonic_diverges",
+   "title": "1 + 1/2 + 1/3 + ... never stops growing",
+   "fact": "Harmonic series diverges: group terms into blocks each >= 1/2",
+   "hook": "Do these shrinking pieces add to a finite number?",
+   "wow": "Grouped blocks each beat 1/2",
+   "ending": "Does 1 + 1/4 + 1/9 + ... converge? (yes, pi^2/6)",
+   "status": ""
+  },
+  {
+   "n": 35,
+   "slug": "collatz_27",
+   "title": "The number 27 takes a wild ride",
+   "fact": "Collatz: 27 reaches 1 after 111 steps, peaking at 9232",
+   "hook": "Halve if even, 3n+1 if odd. Start at 27...",
+   "wow": "Trajectory graph spikes to 9232 then falls to 1",
+   "ending": "Does every number reach 1? (unsolved)",
+   "status": ""
+  },
+  {
+   "n": 36,
+   "slug": "rule_of_72",
+   "title": "Rule of 72: when your money doubles",
+   "fact": "Doubling time ~ 72 / rate%; 8% -> ~9 years (exact 9.006)",
+   "hook": "How long does money take to double at 8%?",
+   "wow": "Exponential curve vs the 72 shortcut",
+   "ending": "At 12%? (about 6 years)",
+   "status": ""
+  },
+  {
+   "n": 37,
+   "slug": "percent_swap",
+   "title": "x% of y = y% of x",
+   "fact": "8% of 50 = 50% of 8 = 4",
+   "hook": "What is 8% of 50, in your head?",
+   "wow": "Swap animation: x*y/100 is symmetric",
+   "ending": "What is 16% of 25? (4)",
+   "status": ""
+  },
+  {
+   "n": 38,
+   "slug": "egyptian_fractions",
+   "title": "1/2 + 1/3 + 1/6 = 1",
+   "fact": "Unit fractions tile a whole bar",
+   "hook": "Can three different unit fractions make exactly 1?",
+   "wow": "Bar splits into 6 sixths: 3+2+1",
+   "ending": "Find x and y: 1/2 + 1/4 + 1/x + 1/y = 1 (one answer: 6 and 12)",
+   "status": ""
+  },
+  {
+   "n": 39,
+   "slug": "neg_times_neg",
+   "title": "Why negative x negative is positive",
+   "fact": "Multiplying by -1 is a 180 deg rotation on the number line; two rotations = 360",
+   "hook": "Why is -2 x -3 = +6?",
+   "wow": "Arrow rotates twice and comes home",
+   "ending": "What is (-1)^100? (1)",
+   "status": ""
+  },
+  {
+   "n": 40,
+   "slug": "staircase_paradox",
+   "title": "The staircase paradox: is sqrt2 = 2?",
+   "fact": "Staircase length stays 2 though it approaches the diagonal sqrt2 = 1.414...",
+   "hook": "Make the steps smaller and smaller... is the diagonal 2?",
+   "wow": "Length counter stays 2 while the shape converges",
+   "ending": "Why is this not a proof? (length is not continuous under this limit)",
+   "status": ""
+  },
+  {
+   "n": 41,
+   "slug": "dice_sum_seven",
+   "title": "Why 7 is the most common dice total",
+   "fact": "Two dice: 6 of 36 outcomes sum to 7",
+   "hook": "Roll two dice. Which total is most likely?",
+   "wow": "6x6 grid diagonals; simulation histogram",
+   "ending": "Which totals are least likely? (2 and 12, 1/36)",
+   "status": ""
+  },
+  {
+   "n": 42,
+   "slug": "golden_angle_sunflower",
+   "title": "Sunflowers use the golden angle",
+   "fact": "Seeds at 137.5 deg increments pack with no gaps (golden angle = 360/phi^2)",
+   "hook": "Why do sunflower seeds form spirals?",
+   "wow": "Changing the angle slightly ruins the packing",
+   "ending": "Count the spirals: which numbers appear? (Fibonacci)",
+   "status": ""
+  },
+  {
+   "n": 43,
+   "slug": "sum_of_cubes",
+   "title": "Cubes add up to a perfect square",
+   "fact": "1^3+2^3+...+n^3 = (1+2+...+n)^2",
+   "hook": "1 + 8 + 27 + 64 = ?",
+   "wow": "Cubes flatten into a square of side 1+2+3+4 = 10 -> 100",
+   "ending": "What is 1^3+...+10^3? (3025)",
+   "status": ""
+  },
+  {
+   "n": 44,
+   "slug": "angle_at_centre",
+   "title": "The angle at the centre is twice the angle at the circle",
+   "fact": "Inscribed angle theorem",
+   "hook": "Move a point on a circle: what stays the same?",
+   "wow": "Angle at centre = 2x inscribed angle as point moves",
+   "ending": "Which theorem says all angles in a semicircle are 90?",
+   "status": ""
+  },
+  {
+   "n": 45,
+   "slug": "prime_spiral",
+   "title": "Primes form lines in a spiral",
+   "fact": "Ulam spiral shows diagonal clusters (e.g. n^2 - n + 41 primes for n=1..40)",
+   "hook": "Write numbers in a spiral and circle the primes...",
+   "wow": "Diagonal streaks appear",
+   "ending": "Why do some diagonals have no primes?",
+   "status": ""
+  }
+ ]
+}
