@@ -993,6 +993,442 @@ VIS = {"hero": V_hero, "bars": V_bars, "particles": V_particles, "number": V_num
        "cliff": V_cliff, "roll": V_roll, "formula": V_formula, "pendulum": V_pendulum}
 
 
+# ---------------- nuclear physics diagrams (fission / fusion) ----------------
+P_C = (235, 75, 85)      # proton
+N_C = (95, 150, 235)     # neutron
+EN_C = (255, 205, 70)    # energy flash
+
+
+def ball(r, c):
+    k = ("ball", r, tuple(c))
+    if k not in _ic:
+        s = 2 * r + 4
+        yy, xx = np.mgrid[0:s, 0:s].astype(float)
+        cx = cy = s / 2
+        dist = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) / r
+        hl = np.sqrt((xx - cx + r * 0.35) ** 2 + (yy - cy + r * 0.38) ** 2) / r
+        shade = np.clip(1.15 - 0.55 * dist ** 2, 0.45, 1.2)[..., None]
+        rgb = np.array(c)[None, None, :] * shade + 255 * np.clip(0.75 - hl * 1.4, 0, 1)[..., None] * 0.8
+        a = np.clip((1 - dist) * r * 1.2, 0, 1) * 255
+        im = np.dstack([np.clip(rgb, 0, 255), a]).astype(np.uint8)
+        _ic[k] = Image.fromarray(im, "RGBA")
+    return _ic[k]
+
+
+def nucleus(npro, nneu, r, seed=0):
+    """cluster of proton/neutron balls packed in a sunflower spiral."""
+    k = ("nuc", npro, nneu, r, seed)
+    if k not in _ic:
+        n = npro + nneu
+        kinds = [0] * npro + [1] * nneu
+        np.random.default_rng(seed).shuffle(kinds)
+        if n == 1:
+            pos = [(0.0, 0.0)]
+        elif n == 2:
+            pos = [(-0.55 * r, 0), (0.55 * r, 0)]
+        elif n == 3:
+            pos = [(-0.6 * r, 0.35 * r), (0.6 * r, 0.35 * r), (0, -0.62 * r)]
+        elif n == 4:
+            pos = [(-0.6 * r, 0.3 * r), (0.6 * r, 0.3 * r), (0, -0.7 * r), (0, 0.15 * r)]
+        else:
+            pos = [(r * 0.95 * math.sqrt(i + 0.5) * math.cos(i * 2.39996), r * 0.95 * math.sqrt(i + 0.5) * math.sin(i * 2.39996)) for i in range(n)]
+        R = max(math.hypot(x, y) for x, y in pos) + r
+        s = int(2 * R + 8)
+        im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+        order = sorted(range(n), key=lambda i: -math.hypot(*pos[i]))
+        if n == 4:
+            order = [0, 1, 2, 3]
+        for i in order:
+            b = ball(r, P_C if kinds[i] == 0 else N_C)
+            im.alpha_composite(b, (int(s / 2 + pos[i][0] - b.width / 2), int(s / 2 + pos[i][1] - b.height / 2)))
+        _ic[k] = im
+    return _ic[k]
+
+
+def _rays(fr, x, y, r0, r1, a, c=EN_C, n=14, w=8, rot=0.0):
+    if a <= 0.02:
+        return
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    for j in range(n):
+        ang = rot + j * 2 * math.pi / n
+        d.line((x + r0 * math.cos(ang), y + r0 * math.sin(ang), x + r1 * math.cos(ang), y + r1 * math.sin(ang)),
+               fill=tuple(c) + (int(255 * a),), width=w)
+    fr.alpha_composite(lay)
+
+
+def _neutron(fr, x, y, r, a=1.0, trail=None):
+    if trail:
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        tx, ty = trail
+        ImageDraw.Draw(lay).line((tx, ty, x, y), fill=(170, 205, 255, int(150 * a)), width=max(3, r // 2))
+        fr.alpha_composite(lay)
+    paste(fr, glow(int(r * 1.4), N_C, 150), x, y, 1, a)
+    paste(fr, ball(r, N_C), x, y, 1, a)
+
+
+def draw_fission(fr, cx, cy, s, t, at, tags=True, kind="dark", lab=None):
+    lab = lab or {}
+    """neutron hits a heavy nucleus at `at`, it stretches and splits into 2 fragments + neutrons + energy."""
+    r = max(8, int(30 * s))
+    big = nucleus(20, 26, r, 1)
+    rad = big.width / 2
+    ts = at + 0.35
+    if t < ts:
+        if t >= at - 1.0:
+            u = clamp((t - (at - 1.0)) / 1.0)
+            x0 = cx - 470 * s
+            nx = x0 + (cx - rad * 0.8 - x0) * u
+            _neutron(fr, nx, cy, int(16 * s + 4), 1, (nx - 120 * s, cy))
+            if tags and s > 0.8:
+                paste(fr, pill("NEUTRON", N_C, size=34, padx=18), max(150, nx), cy - 80 * s, 1, clamp(u * 4))
+        st = clamp((t - at) / 0.35)
+        im = big
+        if st > 0:
+            im = big.resize((int(big.width * (1 + 0.28 * st)), int(big.height * (1 - 0.12 * st))), Image.BILINEAR)
+        jit = 3 * s * math.sin(t * 40) if st > 0 else 0
+        paste(fr, glow(int(rad * 0.9), (255, 120, 90), 60), cx, cy, 1)
+        paste(fr, im, cx + jit, cy + 2 * math.sin(t * 2.5))
+        if tags and s > 0.8:
+            paste(fr, pill(lab.get("big", "HEAVY NUCLEUS"), COLA, size=38), cx, cy + rad + 70, back((t + 0.0) / 0.4))
+        return
+    k = t - ts
+    u = ease_out(k / 0.9)
+    fl = clamp(1 - k / 0.9)
+    paste(fr, glow(int(rad * (0.6 + 1.2 * ease_out(k / 0.5))), EN_C, int(230 * fl)), cx, cy)
+    _rays(fr, cx, cy, rad * (0.4 + 1.0 * u), rad * (0.8 + 1.9 * u), clamp(1 - k / 1.4), w=max(4, int(9 * s)), rot=0.12)
+    fa, fb = nucleus(10, 13, r, 2), nucleus(9, 12, r, 3)
+    dx, dy = 250 * s * u, 120 * s * u
+    paste(fr, glow(int(fa.width * 0.45), (255, 150, 90), 70), cx - dx, cy - dy)
+    paste(fr, fa, cx - dx, cy - dy, 1, 1, rot=-30 * u)
+    paste(fr, glow(int(fb.width * 0.45), (255, 150, 90), 70), cx + dx, cy + dy)
+    paste(fr, fb, cx + dx, cy + dy, 1, 1, rot=25 * u)
+    kn = ease_out(k / 1.3)
+    for ang in (-1.25, 0.35, 2.55):
+        L = 80 * s + 430 * s * kn
+        _neutron(fr, cx + L * math.cos(ang), cy + L * math.sin(ang), int(14 * s + 3), clamp(1.6 - k / 1.6),
+                 (cx + (L - 110 * s) * math.cos(ang), cy + (L - 110 * s) * math.sin(ang)))
+    if tags and s > 0.8:
+        paste(fr, pill("ENERGY", ORANGE, size=48), cx, cy - rad - 140, back((k - 0.2) / 0.4) * (1 + 0.04 * math.sin(t * 5)))
+        if lab.get("fragA"):
+            paste(fr, pill(lab["fragA"], (200, 70, 120), size=38, padx=18), cx - 250 * s, cy - 120 * s - fa.height / 2 - 40, back((k - 0.6) / 0.4))
+            paste(fr, pill(lab["fragB"], (200, 70, 120), size=38, padx=18), cx + 250 * s, cy + 120 * s + fb.height / 2 + 40, back((k - 0.75) / 0.4))
+        else:
+            paste(fr, pill("SMALLER NUCLEI", (200, 70, 120), size=38), cx, cy + rad + 140, back((k - 0.6) / 0.4))
+        if lab.get("neutrons"):
+            paste(fr, pill(lab["neutrons"], N_C, size=36, padx=18), cx - 250 * s, cy + rad + 150, back((k - 0.9) / 0.4))
+
+
+def draw_fusion(fr, cx, cy, s, t, at, tags=True, hot=False, kind="dark", spread=1.0):
+    """two light nuclei rush together and merge at `at` into a heavier one (+ a neutron and energy)."""
+    r = max(10, int(46 * s))
+    if hot:
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(lay)
+        rs = np.random.default_rng(7)
+        for j in range(46):
+            a0, rr = rs.random() * 6.283, (160 + rs.random() * 300) * s
+            ang = a0 + t * (0.8 + rs.random())
+            px, py = cx + rr * math.cos(ang), cy + rr * 0.75 * math.sin(ang)
+            c = (255, 120 + int(100 * rs.random()), 40)
+            d.ellipse((px - 7, py - 7, px + 7, py + 7), fill=c + (190,))
+        fr.alpha_composite(lay.filter(ImageFilter.GaussianBlur(2)))
+        paste(fr, glow(int(330 * s), (255, 120, 40), 70), cx, cy)
+    a, b = nucleus(1, 1, r, 4), nucleus(1, 2, r, 5)
+    if t < at:
+        u = clamp(t / max(0.01, at))
+        p = u * u
+        D = 360 * s * spread * (1 - p) + 60 * s
+        sh = 4 * s * math.sin(t * 30) * p
+        for sgn, im in ((-1, a), (1, b)):
+            x = cx + sgn * D
+            lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            for q in range(1, 4):
+                ImageDraw.Draw(lay).line((x + sgn * (im.width / 2 + 10 + q * 30 * s), cy - 30 * s + q * 15 * s,
+                                          x + sgn * (im.width / 2 + 60 * s + q * 30 * s), cy - 30 * s + q * 15 * s),
+                                         fill=(255, 255, 255, int(160 * p)), width=max(3, int(6 * s)))
+            fr.alpha_composite(lay)
+            paste(fr, glow(int(im.width * 0.5), (255, 170, 90), 90), x, cy + sh)
+            paste(fr, im, x, cy + sh)
+        if tags and s > 0.8:
+            paste(fr, pill("LIGHT NUCLEI", COLB, size=40), cx, cy + 230 * s, back(t / 0.4))
+        return
+    k = t - at
+    u = ease_out(k / 0.5)
+    fl = clamp(1 - k / 0.9)
+    he = nucleus(2, 2, r, 6)
+    paste(fr, glow(int(he.width * (0.5 + 1.4 * ease_out(k / 0.5))), EN_C, int(230 * fl)), cx, cy)
+    _rays(fr, cx, cy, he.width * (0.3 + 0.9 * u), he.width * (0.7 + 1.6 * u), clamp(1 - k / 1.4), w=max(4, int(9 * s)))
+    paste(fr, glow(int(he.width * 0.55), (255, 190, 90), 120), cx, cy)
+    paste(fr, he, cx, cy + 3 * math.sin(t * 3), 0.85 + 0.15 * back(k / 0.4))
+    kn = ease_out(k / 1.3)
+    L = 70 * s + 380 * s * kn
+    _neutron(fr, cx + L * 0.8, cy - L * 0.6, int(15 * s + 3), clamp(1.6 - k / 1.6), (cx + (L - 100 * s) * 0.8, cy - (L - 100 * s) * 0.6))
+    if tags and s > 0.8:
+        paste(fr, pill("HEAVIER NUCLEUS", COLB, size=40), cx, cy + 230 * s, back((k - 0.3) / 0.4))
+        paste(fr, pill("ENERGY", ORANGE, size=48), cx, cy - 250 * s, back((k - 0.15) / 0.4) * (1 + 0.04 * math.sin(t * 5)))
+
+
+def V_fission(fr, v, tl, kind, ent):
+    draw_fission(fr, W / 2, v.get("y", 860), v.get("scale", 1.0), tl + ent, v.get("at", 1.2), v.get("tags", True), kind, v.get("lab"))
+
+
+def V_fusion(fr, v, tl, kind, ent):
+    draw_fusion(fr, W / 2, v.get("y", 860), v.get("scale", 1.0), tl + ent, v.get("at", 1.4), v.get("tags", True), v.get("hot", False), kind)
+    if v.get("cond"):
+        paste(fr, pill(v["cond"], RED, size=40), W / 2, 560, back((tl + ent - v.get("condAt", 0.5)) / 0.4))
+
+
+def V_both(fr, v, tl, kind, ent):
+    t = tl + ent
+    cy = v.get("y", 860)
+    draw_fission(fr, W * 0.27, cy, 0.5, t, v.get("atA", 1.2), False, kind)
+    draw_fusion(fr, W * 0.76, cy, 0.62, t, v.get("atB", 2.8), False, False, kind, spread=0.45)
+    paste(fr, txt("FISSION", 64, COLA, shadow=kind == "dark"), W * 0.27, 560, back(t / 0.4))
+    paste(fr, txt("FUSION", 64, COLB, shadow=kind == "dark"), W * 0.73, 560, back(t / 0.4))
+    paste(fr, pill(v.get("pillA", "SPLIT"), COLA, size=46), W * 0.27, 1170, back((t - 0.2) / 0.4))
+    paste(fr, pill(v.get("pillB", "JOIN"), COLB, size=46), W * 0.73, 1170, back((t - 0.3) / 0.4))
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(lay).line((W / 2, 520, W / 2, 1230), fill=ink(kind) + (60,), width=4)
+    fr.alpha_composite(lay)
+    paste(fr, vs_badge(), W / 2, cy, 0.7 * back(t / 0.4) * (1 + 0.06 * abs(math.sin(tl * 4))))
+    if v.get("energy"):
+        paste(fr, pill(v["energy"], ORANGE, size=48), W / 2, 1290, back((t - v.get("energyAt", 4.0)) / 0.4))
+
+
+def V_chain(fr, v, tl, kind, ent):
+    """neutrons from one split go on to split more nuclei: 1 -> 2 -> 4."""
+    t = tl + ent
+    t0, step = v.get("at", 1.0), v.get("step", 1.2)
+    lv = [[(W / 2, 580)], [(W * 0.3, 870), (W * 0.7, 870)], [(W * 0.13, 1170), (W * 0.38, 1170), (W * 0.62, 1170), (W * 0.87, 1170)]]
+    r = 13
+    big, fa, fb = nucleus(14, 18, r, 8), nucleus(7, 9, r, 9), nucleus(7, 9, r, 10)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    for L in range(2):
+        for j, (x, y) in enumerate(lv[L]):
+            for (x2, y2) in lv[L + 1][2 * j:2 * j + 2]:
+                d.line((x, y, x2, y2), fill=ink(kind) + (45,), width=4)
+    fr.alpha_composite(lay)
+    # incoming neutron
+    if t < t0:
+        u = clamp((t - (t0 - 0.9)) / 0.9)
+        x0, y0 = W / 2 - 420, 440
+        x, y = x0 + (lv[0][0][0] - 70 - x0) * u, y0 + (lv[0][0][1] - y0) * u
+        if t > t0 - 0.9:
+            _neutron(fr, x, y, 14)
+    for L in range(3):
+        ts = t0 + L * step
+        for j, (x, y) in enumerate(lv[L]):
+            if t < ts:
+                if L == 0 or t > ts - step:
+                    paste(fr, big, x, y, back((t - (ts - step) + 0.4) / 0.4) if L else 1)
+                continue
+            k = t - ts
+            u = ease_out(k / 0.6)
+            paste(fr, glow(int(70 + 90 * ease_out(k / 0.4)), EN_C, int(220 * clamp(1 - k / 0.8))), x, y)
+            paste(fr, fa, x - 55 * u, y - 25 * u)
+            paste(fr, fb, x + 55 * u, y + 25 * u)
+            if L < 2:
+                for (x2, y2) in lv[L + 1][2 * j:2 * j + 2]:
+                    q = clamp(k / (step * 0.8))
+                    if q < 1:
+                        nx, ny = x + (x2 - x) * q, y + (y2 - y) * q
+                        _neutron(fr, nx, ny, 12, 1, (x + (x2 - x) * max(0, q - 0.15), y + (y2 - y) * max(0, q - 0.15)))
+    paste(fr, pill(v.get("label", "CHAIN REACTION"), RED, size=44), W / 2, 1300, back((t - t0 - 2 * step) / 0.4))
+
+
+def V_plant(fr, v, tl, kind, ent):
+    """nuclear power plant: reactor (fission heat) -> steam from the cooling tower -> electricity to a bulb."""
+    t = tl + ent
+    gy = v.get("ground", 1230)
+    e = ease_out(t / 0.5)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.rectangle((0, gy, W, gy + 70), fill=(90, 170, 80, 255))
+    d.rectangle((0, gy + 26, W, gy + 70), fill=(120, 90, 60, 255))
+    off = 60 * (1 - e)
+    # reactor building + dome
+    rx0, rx1 = 110, 400
+    d.rectangle((rx0, 960 + off, rx1, gy), fill=(205, 210, 225, 255))
+    d.pieslice((rx0, 820 + off, rx1, 1100 + off), 180, 360, fill=(225, 230, 242, 255))
+    d.rectangle((rx0, 955 + off, rx1, 975 + off), fill=(150, 160, 185, 255))
+    # cooling tower (hyperboloid)
+    cx, top, bw, tw, ww = 640, 720, 330, 220, 190
+    pts_l, pts_r = [], []
+    for i in range(21):
+        q = i / 20
+        y = top + (gy - top) * q
+        half = (tw / 2) * (1 - q) + (bw / 2) * q - 45 * math.sin(math.pi * q)
+        pts_l.append((cx - half, y + off))
+        pts_r.append((cx + half, y + off))
+    d.polygon(pts_l + pts_r[::-1], fill=(190, 196, 210, 255))
+    d.polygon(pts_l[:4] + pts_r[:4][::-1], fill=(170, 176, 196, 255))
+    # pylon + wires
+    px = 900
+    d.line((px - 50, gy, px, 760, px + 50, gy), fill=ink(kind) + (230,), width=8)
+    d.line((px - 70, 820, px + 70, 820), fill=ink(kind) + (230,), width=8)
+    d.line((px - 40, 920, px + 40, 920), fill=ink(kind) + (230,), width=6)
+    d.line((rx1, 1010 + off, px - 70, 820), fill=ink(kind) + (160,), width=4)
+    fr.alpha_composite(lay)
+    # glowing core inside the dome
+    ga = 0.7 + 0.3 * math.sin(t * 4)
+    paste(fr, glow(60, EN_C, int(200 * ga)), (rx0 + rx1) / 2, 1080 + off)
+    paste(fr, nucleus(6, 7, 11, 11), (rx0 + rx1) / 2, 1080 + off, 1, e)
+    # steam puffs
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    for j in range(9):
+        q = ((t * 0.35 + j / 9) % 1.0)
+        sx = cx + 40 * math.sin(j * 1.7 + q * 3) + q * 60
+        sy = top - 20 - q * 300
+        rr = 40 + 70 * q
+        d.ellipse((sx - rr, sy - rr, sx + rr, sy + rr), fill=(245, 245, 250, int(200 * (1 - q) * e)))
+    fr.alpha_composite(lay.filter(ImageFilter.GaussianBlur(6)))
+    # bulb
+    ba = clamp((t - v.get("bulbAt", 1.6)) / 0.4)
+    paste(fr, glow(110, (255, 220, 90), int(200 * ba * (0.85 + 0.15 * math.sin(t * 6)))), px, 640)
+    paste(fr, icon("💡", 170), px, 640, back((t - v.get("bulbAt", 1.6)) / 0.4))
+    paste(fr, pill(v.get("tagA", "FISSION HEAT"), COLA, size=36, padx=18), (rx0 + rx1) / 2, 770 + off, back((t - 0.5) / 0.4))
+    paste(fr, pill("STEAM", (110, 120, 150), size=36, padx=18), cx, 540, back((t - 1.0) / 0.4))
+    paste(fr, pill("ELECTRICITY", GREEN, size=36, padx=18), px, 480, back((t - v.get("bulbAt", 1.6) - 0.2) / 0.4))
+    if v.get("label"):
+        paste(fr, pill(v["label"], v.get("labelCol", ORANGE), size=48), W / 2, gy + 85, back((t - v.get("labelAt", 2.0)) / 0.4))
+
+
+def _sun_img(R):
+    k = ("sun", R)
+    if k not in _ic:
+        s = 2 * R + 4
+        yy, xx = np.mgrid[0:s, 0:s].astype(float)
+        dist = np.sqrt((xx - s / 2) ** 2 + (yy - s / 2) ** 2) / R
+        rs = np.random.default_rng(3)
+        noise = Image.fromarray((rs.random((s // 8 + 1, s // 8 + 1)) * 255).astype(np.uint8)).resize((s, s), Image.BICUBIC)
+        nz = np.asarray(noise, float)[:s, :s] / 255
+        limb = np.clip(1 - 0.55 * dist ** 2, 0, 1)
+        r = 255 * np.ones_like(dist)
+        g = 120 + 120 * limb + 20 * (nz - 0.5)
+        b = 20 + 120 * limb ** 3 + 20 * (nz - 0.5)
+        a = np.clip((1 - dist) * R * 0.8, 0, 1) * 255
+        im = np.dstack([r, np.clip(g, 0, 255), np.clip(b, 0, 255), a]).astype(np.uint8)
+        _ic[k] = Image.fromarray(im, "RGBA")
+    return _ic[k]
+
+
+def V_sun(fr, v, tl, kind, ent):
+    t = tl + ent
+    mode = v.get("mode", "core")
+    if mode == "stars":
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(lay)
+        rs = np.random.default_rng(12)
+        for j in range(70):
+            x, y = rs.random() * W, 420 + rs.random() * 900
+            if abs(x - W / 2) < 230 and abs(y - 860) < 230:
+                continue
+            tw = 0.5 + 0.5 * math.sin(t * (2 + 3 * rs.random()) + j)
+            rr = 3 + 7 * rs.random() * tw
+            a = clamp((t - rs.random() * 1.5) / 0.4)
+            c = [(255, 240, 200), (200, 220, 255), (255, 210, 160)][j % 3]
+            d.ellipse((x - rr, y - rr, x + rr, y + rr), fill=c + (int(255 * a),))
+            if rr > 7:
+                d.line((x - 2.5 * rr, y, x + 2.5 * rr, y), fill=c + (int(150 * a),), width=3)
+                d.line((x, y - 2.5 * rr, x, y + 2.5 * rr), fill=c + (int(150 * a),), width=3)
+        fr.alpha_composite(lay)
+        R = 190
+    else:
+        R = 290
+    cy = v.get("y", 860)
+    pul = 1 + 0.03 * math.sin(t * 3)
+    paste(fr, glow(int(R * 1.15), (255, 150, 40), 150), W / 2, cy, pul)
+    _rays(fr, W / 2, cy, R * 1.05, R * (1.3 + 0.06 * math.sin(t * 5)), 0.55, c=(255, 190, 60), n=24, w=10, rot=t * 0.15)
+    paste(fr, _sun_img(R), W / 2, cy, back(t / 0.5) if mode == "stars" else 1, 1, rot=t * 4)
+    if mode == "core":
+        a = clamp((t - v.get("at", 1.0)) / 0.4)
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        rc = R * 0.32
+        ImageDraw.Draw(lay).ellipse((W / 2 - rc, cy - rc, W / 2 + rc, cy + rc), outline=(255, 255, 255, int(230 * a)), width=6)
+        fr.alpha_composite(lay)
+        paste(fr, glow(int(rc), (255, 255, 220), int(200 * a * (0.8 + 0.2 * math.sin(t * 6)))), W / 2, cy)
+        paste(fr, pill("CORE: FUSION", RED, size=42), W / 2, cy + R + 75, back((t - v.get("at", 1.0) - 0.2) / 0.4))
+    if v.get("label"):
+        paste(fr, pill(v["label"], v.get("labelCol", ORANGE), size=46), W / 2, cy + R + (170 if mode == "core" else 110),
+              back((t - v.get("labelAt", 2.0)) / 0.4))
+
+
+def V_pp(fr, v, tl, kind, ent):
+    """Sun: hydrogen nuclei (protons) fuse, step by step, into helium; a little mass becomes energy."""
+    t = tl + ent
+    cy = v.get("y", 880)
+    at = v.get("at", 2.4)
+    r = 46
+    corners = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
+    if t < at:
+        u = clamp((t - 0.5) / max(0.1, at - 0.5))
+        p = u * u
+        for i, (sx, sy) in enumerate(corners):
+            D = 300 * (1 - p) + 50
+            ang = math.atan2(sy, sx) + 0.9 * p
+            x, y = W / 2 + D * math.sqrt(2) * math.cos(ang) * 0.75, cy + D * math.sqrt(2) * math.sin(ang) * 0.75
+            e = back((t - 0.12 * i) / 0.4)
+            paste(fr, glow(60, (255, 120, 100), 110), x, y, e)
+            paste(fr, ball(r, P_C), x, y, e)
+            paste(fr, txt("H", 46, WHITE), x, y, e)
+        paste(fr, pill("4 HYDROGEN NUCLEI", P_C, size=40), W / 2, cy + 330, back((t - 0.3) / 0.4))
+    else:
+        k = t - at
+        u = ease_out(k / 0.5)
+        he = nucleus(2, 2, r, 6)
+        paste(fr, glow(int(80 + 260 * ease_out(k / 0.6)), EN_C, int(230 * clamp(1 - k / 1.0))), W / 2, cy)
+        _rays(fr, W / 2, cy, 90 + 150 * u, 160 + 330 * u, clamp(1 - k / 1.6), w=9)
+        paste(fr, glow(110, (255, 190, 90), 130), W / 2, cy)
+        paste(fr, he, W / 2, cy, 0.8 + 0.2 * back(k / 0.4))
+        paste(fr, pill("HELIUM", (230, 120, 20), size=46), W / 2, cy + 200, back((k - 0.2) / 0.4))
+        paste(fr, pill(v.get("massTag", "~0.7% MASS → ENERGY"), RED, size=44), W / 2, cy + 320, back((t - v.get("massAt", at + 1.2)) / 0.4))
+    if v.get("note"):
+        paste(fr, txt(v["note"], 40, ink(kind)), W / 2, 450, 1, clamp((t - 0.3) / 0.4))
+
+
+def V_tokamak(fr, v, tl, kind, ent):
+    """fusion research machine (tokamak) with a glowing plasma ring."""
+    t = tl + ent
+    cy = v.get("y", 840)
+    e = ease_out(t / 0.5)
+    rx, ry = 400, 185
+    coil_pos = [i * 2 * math.pi / 12 for i in range(12)]
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.rounded_rectangle((W / 2 - 300, cy + 150, W / 2 + 300, cy + 300), 20, fill=(120, 125, 145, 255))
+    for a in coil_pos:
+        if math.sin(a) < 0:
+            x, y = W / 2 + rx * math.cos(a), cy + ry * math.sin(a)
+            d.rounded_rectangle((x - 26, y - 120, x + 26, y + 120), 18, fill=(200, 120, 60, 255))
+    d.ellipse((W / 2 - rx, cy - ry, W / 2 + rx, cy + ry), fill=(150, 158, 180, 255))
+    d.ellipse((W / 2 - rx + 30, cy - ry + 20, W / 2 + rx - 30, cy + ry - 20), fill=(110, 116, 140, 255))
+    d.ellipse((W / 2 - 170, cy - 62, W / 2 + 170, cy + 62), fill=(0, 0, 0, 0))
+    d.ellipse((W / 2 - 170, cy - 62, W / 2 + 170, cy + 62), outline=(90, 96, 120, 255), width=10)
+    fr.alpha_composite(lay)
+    pa = clamp((t - v.get("plasmaAt", 0.8)) / 0.6) * (0.85 + 0.15 * math.sin(t * 7))
+    pl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(pl).ellipse((W / 2 - 290, cy - 125, W / 2 + 290, cy + 125), outline=(255, 110, 210, int(255 * pa)), width=34)
+    fr.alpha_composite(pl.filter(ImageFilter.GaussianBlur(14)))
+    fr.alpha_composite(pl.filter(ImageFilter.GaussianBlur(3)))
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    for a in coil_pos:
+        if math.sin(a) >= 0:
+            x, y = W / 2 + rx * math.cos(a), cy + ry * math.sin(a)
+            d.rounded_rectangle((x - 28, y - 125, x + 28, y + 125), 18, fill=(215, 130, 65, 255), outline=(150, 80, 40, 255), width=4)
+    fr.alpha_composite(lay)
+    paste(fr, pill("FUSION RESEARCH (TOKAMAK)", (150, 70, 200), size=40), W / 2, cy - ry - 150, back((t - 0.2) / 0.4))
+    paste(fr, pill(v.get("tagHot", "PLASMA: 100+ MILLION °C"), RED, size=40), W / 2, cy - ry - 50, back((t - v.get("plasmaAt", 0.8) - 0.3) / 0.4))
+    paste(fr, pill(v.get("label", "STILL EXPERIMENTAL"), ORANGE, size=52), W / 2, cy + 400, back((t - v.get("labelAt", 2.0)) / 0.4) * (1 + 0.04 * math.sin(t * 4)))
+
+
+VIS.update({"fission": V_fission, "fusion": V_fusion, "both": V_both, "chain": V_chain, "plant": V_plant,
+            "sun": V_sun, "pp": V_pp, "tokamak": V_tokamak})
+
+
 # ---------------- confetti ----------------
 _cr = np.random.default_rng(9)
 CONF = [(255, 90, 90), (255, 190, 40), (60, 170, 255), (80, 200, 120), (190, 110, 255)]
