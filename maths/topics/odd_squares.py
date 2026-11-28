@@ -182,10 +182,8 @@ def top_equation(r, t):
                        lerp(60, 96, ease_back(prog(t, WOW_AT, 0.4))), a * reveal)
 
 
-def draw(r, t):
-    camera(r, t)
-    r.background(t)
-    c = r.ctx
+def scene(r, t):
+    # camera(r, t) is called by the template before the background
     # ---- world layer
     if t >= 3.4:
         r.push_world()
@@ -204,48 +202,36 @@ def draw(r, t):
                 if parts:
                     parts.append((" + ", DIM))
                 parts.append((s, COLS[i % 6] if s != "…" else WHITE))
-        if t < 0.001:  # frame 0 = thumbnail: show everything
-            pass
         r.math_row(parts, W / 2, y, 92, 1 - out)
         qa = (1 if t < 0.001 else ease_back(prog(t, 1.5, 0.35))) * (1 - out)
         r.glow(W / 2, y + 190, 200, ORANGE, 0.35 * qa)
         r.math_row([("= ?", ORANGE)], W / 2, y + 190, 150 * max(qa, 0.01), qa)
-        r.caption("Can you add these in 3 seconds?", t if t > 0.001 else 2.0, 1.7, 3.3, y=1300, size=56)
-        r.text("ODD NUMBERS  ×  SQUARES", W / 2, 300, 40, DIM, (1 - out), SANS, bold=True)
     top_equation(r, t)
-    # ---- wow flash
-    r.flash(0.55 * (1 - ease_out(prog(t, WOW_AT, 0.5))) if t >= WOW_AT else 0)
-    # ---- ending formula + question
+    # ---- ending formula (the template draws the question end card below it)
     if t >= 39.8:
         a = ease(prog(t, 39.9, 0.5))
         r.glow(W / 2, 820, 420, ORANGE, 0.18 * a)
         r.math_row([("1 + 3 + 5 + … + ", WHITE), ("(2n − 1)", CYAN), (" = ", DIM), ("n²", ORANGE)],
                    W / 2, 820, 80, a)
-        qa = ease(prog(t, 43.0, 0.5))
-        r.text("So what do", W / 2, 1060, 54, WHITE, qa, SANS, bold=True)
-        r.math_row([("2 + 4 + 6 + 8 + …", YELLOW)], W / 2, 1160, 84, qa)
-        r.text("build?", W / 2, 1265, 54, WHITE, qa, SANS, bold=True)
-    # ---- captions
-    caps = [
-        ("Start with 1 tile", 3.7, 6.4),
-        ("Add the next odd number: 3", 6.7, 9.6),
-        ("Add 5... still a perfect square", 9.9, 13.0),
-        ("Add 7 → a 4 × 4 square", 13.3, 16.6),
-        ("Every odd number completes a bigger square", 16.7, 19.6),
-        ("10 odd numbers → 10 × 10 = 100", 22.6, 25.5),
-        ("A square of side n, plus two strips of n, plus 1", 25.9, 29.6),
-        ("That's 2n + 1: always the next odd number", 29.8, 32.6),
-        ("50 odd numbers...", 33.2, WOW_AT),
-        ("...make a 50 × 50 square!", WOW_AT + 0.2, 39.5),
-        ("The first n odd numbers always add to n²", 40.2, 42.9),
-        ("Comment your answer below", 43.6, 46.0),
-    ]
-    for s, a, b in caps:
-        r.caption(s, t, a, b, y=1500 if t < 39.8 else 1420)
-    r.chrome(t, DURATION)
-    # fade out
-    if t > DURATION - 0.4:
-        c.set_source_rgba(0, 0, 0, prog(t, DURATION - 0.4, 0.4)); c.paint()
+
+
+TAG = "ODD NUMBERS  ×  SQUARES"
+QUESTION_AT = 43.0
+QUESTION = "What do 2 + 4 + 6 + 8 + … build?"
+CAPTIONS = [
+    ("Can you add these in 3 seconds?", 0.0, 3.3),
+    ("Start with 1 tile", 3.7, 6.4),
+    ("Add the next odd number: 3", 6.7, 9.6),
+    ("Add 5... still a perfect square", 9.9, 13.0),
+    ("Add 7 → a 4 × 4 square", 13.3, 16.6),
+    ("Every odd number completes a bigger square", 16.7, 19.6),
+    ("10 odd numbers → 10 × 10 = 100", 22.6, 25.5),
+    ("A square of side n, plus two strips of n, plus 1", 25.9, 29.6),
+    ("That's 2n + 1: always the next odd number", 29.8, 32.6),
+    ("50 odd numbers...", 33.2, WOW_AT),
+    ("...make a 50 × 50 square!", WOW_AT + 0.2, 39.5),
+    ("The first n odd numbers always add to n²", 40.2, 42.9),
+]
 
 
 def sfx():
@@ -265,7 +251,7 @@ def sfx():
            ("pop", 27.6, 0.5, 5), ("whoosh", 29.7, 0.35), ("chime", 29.85, 0.6, 7),
            ("whoosh", 32.6, 0.5), ("click", 32.9, 0.5), ("riser", WOW_AT, 0.7), ("boom", WOW_AT, 0.95),
            ("sparkle", WOW_AT + 0.05, 0.6, 12), ("chime", WOW_AT + 0.1, 0.7, 12),
-           ("whoosh", 39.6, 0.4), ("chime", 39.95, 0.6, 0), ("pop", 43.0, 0.6, 7)]
+           ("whoosh", 39.6, 0.4), ("chime", 39.95, 0.6, 0)]
     return ev
 
 
@@ -279,5 +265,5 @@ So the first n odd numbers always add up to n².
 🧠 Your turn: what do 2 + 4 + 6 + 8 + … build? Comment below 👇
 
 📌 Save this for your next maths exam
-🔔 Follow @srj_edu_app for a new maths visual every night"""
+🔔 Follow @srj_edu_app for 2 new maths visuals every day"""
 HASHTAGS = "#maths #math #mathematics #mathtricks #visualmath #oddnumbers #squarenumbers #mathproof #learnmaths #srjedu #keralastudents #psc #education #reels"

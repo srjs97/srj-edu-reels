@@ -28,22 +28,30 @@ If fewer than 8 empty topics remain, append 14 new, correct, visual topics to th
 queue never runs dry. Never add a topic that is already in the list under another name.
 
 ## 4. Write the topic module `maths/topics/<slug>.py` (once per topic, both before rendering)
-Copy the shape of `maths/topics/odd_squares.py` and use the helpers in `maths/engine.py`
-(`background`, `math_row`, `text`, `rect`, `circle`, `line`, `glow`, `flash`, `caption`, `chrome`,
-camera via `set_camera` + `push_world`/`pop`, easing `prog`/`ease`/`ease_back`/`window`).
-The module defines `TITLE`, `DURATION` (35-55 s), `WOW_AT`, `MUSIC_SEED` (= topic n mod 3), `draw(r, t)`,
-`sfx()`, `YT_TITLE`, `CAPTION`, `HASHTAGS`, and a docstring listing every number it shows, each checked.
+**ONE fixed template for every maths reel (Suraj, 2026-11-28): same layout, same style, only the topic and its
+animation change.** The template is locked in `maths/template.py` (background + grid, handle, TAG line, caption
+font/position, wow flash, "YOUR TURN" question end card, progress bar, fade, music + export). Never change
+`template.py`, `engine.py` styling, `sound.py` or `make.py` for a topic, and never draw your own background,
+handle, captions, flash, end card or fade. `engine.render` runs `template.check()` and refuses a topic that
+breaks the contract.
+
+Copy the shape of `maths/topics/odd_squares.py` (the reference template topic). The module defines `TAG`,
+`TITLE`, `DURATION` (35-55 s), `WOW_AT`, `MUSIC_SEED` (= topic n mod 3), `QUESTION_AT`, `QUESTION` (<= 40 chars),
+`CAPTIONS` [(text <= 48 chars, t0, t1)], optional `camera(r, t)`, `scene(r, t)` (visuals only), `sfx()`,
+`YT_TITLE`, `CAPTION`, `HASHTAGS`, and a docstring listing every number it shows, each checked.
+Use the helpers in `maths/engine.py` (`math_row`, `text`, `rect`, `circle`, `line`, `glow`, camera via
+`set_camera` + `push_world`/`pop`, easing `prog`/`ease`/`ease_back`/`window`) and the engine palette only
+(ORANGE, CYAN, PINK, YELLOW, GREEN, VIOLET, WHITE, DIM).
 
 Story (always): **hook** in the first 1-3 s (frame 0 must already show the hook: it is the thumbnail) ->
 **visual exploration** (shapes/graphs moving, not text) -> **step-by-step explanation** (equation morphs,
 colour-coded to the shapes) -> **wow moment** at `WOW_AT` (riser ending there + boom + flash + particles) ->
-**ending** with the general formula and a curiosity question ("Comment your answer below").
+**ending** with the general formula (drawn by `scene` above y 1000) and the template end card from `QUESTION_AT`.
 
 Rules:
 - Every number, formula and graph must be correct. Compute values in Python, never type them from memory.
   If a fact cannot be verified, change the topic angle rather than guess.
-- Keep important things between y = 250 and y = 1560 (safe area); captions at y 1500, max ~45 characters.
-  `math_row` and `caption` shrink text to fit, but keep lines short anyway.
+- Keep scene content between y = 260 and y = 1440 (safe area; the template owns y < 250 and the caption band).
 - Sound: a `click` or `pop` when a number or shape appears (rising `pitch` for sequences), `whoosh` on scene
   changes, `chime` when a result lands, `riser` + `boom` + `sparkle` at the wow. Gains 0.4-0.9.
 - Make every animation explain something; no random motion.
