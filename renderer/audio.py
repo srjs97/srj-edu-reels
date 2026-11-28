@@ -109,6 +109,26 @@ def sfx_streak(dur=0.9):
     return 0.7 * y / (np.abs(y).max() + 1e-9)
 
 
+def sfx_hum(dur=2.5):
+    # soft mains-style hum (100 Hz + harmonics), slow fade in/out
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * 100 * t) + 0.5 * np.sin(2 * np.pi * 200 * t) + 0.25 * np.sin(2 * np.pi * 300 * t)
+    env = np.minimum(1, np.minimum(t / 0.4, (dur - t) / 0.6))
+    return 0.5 * y * env / 1.75
+
+
+def sfx_zap(dur=0.35):
+    # short electric pulse: buzzy saw chirp + noise burst
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    f = 900 * np.exp(-t * 9) + 120
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    y = 2 * ((ph / (2 * np.pi)) % 1) - 1
+    y = y + 0.4 * rng.standard_normal(n) * np.exp(-t * 30)
+    return 0.6 * y * np.exp(-t * 10)
+
+
 SFX = {
     "whoosh": lambda: sfx_whoosh(),
     "whoosh_down": lambda: sfx_whoosh(up=False),
@@ -119,6 +139,8 @@ SFX = {
     "tick": lambda: sfx_tick(),
     "riser": lambda: sfx_riser(),
     "streak": lambda: sfx_streak(),
+    "hum": lambda: sfx_hum(),
+    "zap": lambda: sfx_zap(),
 }
 
 # ---------------- MUSIC ----------------

@@ -1,0 +1,655 @@
+{
+ "style": "explainer",
+ "topicNo": 27,
+ "thingA": "AC",
+ "thingB": "DC",
+ "colA": [
+  255,
+  120,
+  60
+ ],
+ "colB": [
+  60,
+  170,
+  255
+ ],
+ "voice": "voice/027.wav",
+ "scenes": [
+  {
+   "bg": "dark",
+   "head": "AC vs DC",
+   "visual": {
+    "type": "wires",
+    "vs": true,
+    "vsY": 875,
+    "rows": [
+     {
+      "mode": "ac",
+      "y": 660,
+      "name": "AC",
+      "label": "100 FLIPS / SEC",
+      "src": "plug"
+     },
+     {
+      "mode": "dc",
+      "y": 1090,
+      "name": "DC",
+      "label": "ONE WAY ONLY",
+      "src": "battery"
+     }
+    ]
+   },
+   "captions": [
+    "നമ്മുടെ വീട്ടിലെ വൈദ്യുതി സെക്കൻഡിൽ **100 തവണ** ദിശ മാറുമ്പോൾ,",
+    "ബാറ്ററിയിലെ വൈദ്യുതി **ഒരേ ദിശയിൽ** മാത്രം ഒഴുകുന്നത് എന്തുകൊണ്ട്?"
+   ],
+   "capAt": [
+    0,
+    3.75
+   ],
+   "sfx": [
+    [
+     "zap",
+     0.05,
+     0.6
+    ],
+    [
+     "hum",
+     0.3,
+     0.3
+    ]
+   ],
+   "dur": 7.55
+  },
+  {
+   "bg": "light",
+   "head": "TWO TYPES OF CURRENT",
+   "visual": {
+    "type": "hero",
+    "vs": true,
+    "items": [
+     {
+      "icon": "🔌",
+      "name": "AC",
+      "label": "ALTERNATING",
+      "labelCol": [
+       255,
+       120,
+       60
+      ],
+      "nameCol": [
+       255,
+       120,
+       60
+      ]
+     },
+     {
+      "icon": "🔋",
+      "name": "DC",
+      "label": "DIRECT",
+      "labelCol": [
+       60,
+       170,
+       255
+      ],
+      "nameCol": [
+       60,
+       170,
+       255
+      ]
+     }
+    ]
+   },
+   "captions": [
+    "വൈദ്യുത പ്രവാഹത്തെ പ്രധാനമായും **രണ്ടായി** തിരിക്കാം,",
+    "**AC** എന്നും **DC** എന്നും."
+   ],
+   "capAt": [
+    0,
+    2.95
+   ],
+   "dur": 5.03
+  },
+  {
+   "bg": "dark",
+   "head": "DC = DIRECT CURRENT",
+   "visual": {
+    "type": "wires",
+    "tag": "ONE DIRECTION ONLY",
+    "tagCol": [
+     60,
+     170,
+     255
+    ],
+    "tagY": 1150,
+    "tagAt": 1.2,
+    "rows": [
+     {
+      "mode": "dc",
+      "y": 800,
+      "src": "battery",
+      "col": [
+       60,
+       170,
+       255
+      ]
+     }
+    ]
+   },
+   "captions": [
+    "**DC** അഥവാ **Direct Current,**",
+    "**ഒരേ ദിശയിൽ** മാത്രം ഒഴുകുന്ന വൈദ്യുത പ്രവാഹം."
+   ],
+   "capAt": [
+    0,
+    2.09
+   ],
+   "headCol": [
+    60,
+    170,
+    255
+   ],
+   "dur": 4.98
+  },
+  {
+   "bg": "light",
+   "head": "BATTERIES & POWER BANKS",
+   "visual": {
+    "type": "hero",
+    "items": [
+     {
+      "icon": "draw:battery",
+      "size": 330,
+      "label": "BATTERY",
+      "labelCol": [
+       60,
+       170,
+       255
+      ],
+      "glow": [
+       150,
+       200,
+       255
+      ]
+     },
+     {
+      "icon": "draw:powerbank",
+      "size": 380,
+      "label": "POWER BANK",
+      "labelCol": [
+       60,
+       170,
+       255
+      ],
+      "glow": [
+       150,
+       200,
+       255
+      ]
+     }
+    ]
+   },
+   "captions": [
+    "നമ്മുടെ **ബാറ്ററികളിലും പവർ ബാങ്കുകളിലും**",
+    "സാധാരണയായി **DC** വൈദ്യുതിയാണ് ലഭിക്കുന്നത്."
+   ],
+   "capAt": [
+    0,
+    1.95
+   ],
+   "dur": 4.34
+  },
+  {
+   "bg": "dark",
+   "head": "AC = ALTERNATING CURRENT",
+   "visual": {
+    "type": "wires",
+    "tag": "KEEPS CHANGING DIRECTION",
+    "tagCol": [
+     255,
+     120,
+     60
+    ],
+    "tagY": 1150,
+    "tagAt": 1.2,
+    "rows": [
+     {
+      "mode": "ac",
+      "y": 800,
+      "src": "plug",
+      "col": [
+       255,
+       120,
+       60
+      ]
+     }
+    ]
+   },
+   "captions": [
+    "എന്നാൽ **AC** അഥവാ **Alternating Current,**",
+    "നിശ്ചിത ഇടവേളകളിൽ **ദിശ മാറിക്കൊണ്ടിരിക്കുന്ന** പ്രവാഹം."
+   ],
+   "capAt": [
+    0,
+    2.77
+   ],
+   "sfx": [
+    [
+     "whoosh_down",
+     0.9,
+     0.35
+    ],
+    [
+     "whoosh",
+     2.7,
+     0.35
+    ],
+    [
+     "whoosh_down",
+     4.5,
+     0.35
+    ]
+   ],
+   "headCol": [
+    255,
+    120,
+    60
+   ],
+   "dur": 6.6
+  },
+  {
+   "bg": "light",
+   "head": "AC REACHES OUR HOMES",
+   "visual": {
+    "type": "home",
+    "label": "AC SUPPLY",
+    "labelCol": [
+     255,
+     120,
+     60
+    ],
+    "bulbAt": 1.8
+   },
+   "captions": [
+    "നമ്മുടെ **വീടുകളിലേക്ക്** വൈദ്യുതി എത്തിക്കുന്നത്",
+    "സാധാരണയായി **AC** വഴിയാണ്."
+   ],
+   "capAt": [
+    0,
+    1.9
+   ],
+   "sfx": [
+    [
+     "ding",
+     1.8,
+     0.3
+    ]
+   ],
+   "dur": 3.7
+  },
+  {
+   "bg": "dark",
+   "head": "INDIA'S AC FREQUENCY",
+   "visual": {
+    "type": "number",
+    "items": [
+     {
+      "icon": "🇮🇳",
+      "value": 50,
+      "suffix": " Hz",
+      "label": "50 HERTZ"
+     }
+    ]
+   },
+   "captions": [
+    "ഇന്ത്യയിൽ AC യുടെ ആവൃത്തി **50 ഹെർട്സ്** ആണ്."
+   ],
+   "dur": 3.15
+  },
+  {
+   "bg": "light",
+   "head": "50 CYCLES EVERY SECOND",
+   "visual": {
+    "type": "wave",
+    "mode": "count",
+    "drawDur": 2.4
+   },
+   "captions": [
+    "അതായത്, ഒരു സെക്കൻഡിൽ",
+    "**50 പൂർണ്ണ ചക്രങ്ങൾ** പൂർത്തിയാക്കുന്നു."
+   ],
+   "capAt": [
+    0,
+    1.5
+   ],
+   "sfx": [
+    [
+     "riser",
+     0.3,
+     0.35
+    ],
+    [
+     "ding",
+     2.75,
+     0.4
+    ]
+   ],
+   "dur": 3.82
+  },
+  {
+   "bg": "dark",
+   "head": "2 FLIPS IN EVERY CYCLE",
+   "visual": {
+    "type": "wave",
+    "mode": "rev",
+    "period": 2.4,
+    "eqAt": 4.3,
+    "y": 900
+   },
+   "captions": [
+    "ഓരോ ചക്രത്തിലും പ്രവാഹം **രണ്ടുതവണ** ദിശ മാറുന്നതിനാൽ,",
+    "സെക്കൻഡിൽ **100 തവണ** ദിശ മാറുന്നു!"
+   ],
+   "capAt": [
+    0,
+    4.3
+   ],
+   "sfx": [
+    [
+     "pop",
+     1.6,
+     0.4
+    ],
+    [
+     "pop",
+     2.8,
+     0.4
+    ],
+    [
+     "pop",
+     4.0,
+     0.4
+    ],
+    [
+     "boom",
+     4.3,
+     0.4
+    ]
+   ],
+   "dur": 7.23
+  },
+  {
+   "bg": "light",
+   "head": "AC: BACK AND FORTH",
+   "visual": {
+    "type": "wires",
+    "rows": [
+     {
+      "mode": "ac",
+      "y": 660,
+      "src": "plug",
+      "col": [
+       255,
+       120,
+       60
+      ],
+      "graph": true,
+      "graphLabel": "AC CURRENT"
+     }
+    ]
+   },
+   "captions": [
+    "ഇത് മനസ്സിലാക്കാൻ, AC വൈദ്യുതിയെ",
+    "**അങ്ങോട്ടും ഇങ്ങോട്ടും** ചലിക്കുന്ന ഒരു പ്രവാഹമായി സങ്കൽപ്പിക്കാം."
+   ],
+   "capAt": [
+    0,
+    2.2
+   ],
+   "sfx": [
+    [
+     "whoosh_down",
+     1.6,
+     0.3
+    ],
+    [
+     "whoosh",
+     3.4,
+     0.3
+    ],
+    [
+     "whoosh_down",
+     5.2,
+     0.3
+    ]
+   ],
+   "headCol": [
+    255,
+    120,
+    60
+   ],
+   "dur": 6.3
+  },
+  {
+   "bg": "dark",
+   "head": "DC: ONE WAY, NON-STOP",
+   "visual": {
+    "type": "wires",
+    "rows": [
+     {
+      "mode": "dc",
+      "y": 660,
+      "src": "battery",
+      "col": [
+       60,
+       170,
+       255
+      ],
+      "graph": true,
+      "graphLabel": "DC CURRENT"
+     }
+    ]
+   },
+   "captions": [
+    "**DC** യാകട്ടെ, **ഒരേ ദിശയിൽ** തുടർച്ചയായി ഒഴുകുന്നു."
+   ],
+   "headCol": [
+    60,
+    170,
+    255
+   ],
+   "dur": 2.95
+  },
+  {
+   "bg": "light",
+   "head": "AC'S SUPERPOWER",
+   "visual": {
+    "type": "transformer",
+    "swapAt": 5.4
+   },
+   "captions": [
+    "AC ഉപയോഗിക്കുന്നതിന്റെ **പ്രധാന നേട്ടം,**",
+    "**ട്രാൻസ്ഫോർമറുകൾ** ഉപയോഗിച്ച് വോൾട്ടേജ്",
+    "എളുപ്പത്തിൽ **കൂട്ടാനും കുറയ്ക്കാനും** കഴിയും!"
+   ],
+   "capAt": [
+    0,
+    2.8,
+    5.2
+   ],
+   "sfx": [
+    [
+     "hum",
+     0.3,
+     0.3
+    ],
+    [
+     "riser",
+     0.6,
+     0.25
+    ],
+    [
+     "whoosh_down",
+     5.3,
+     0.35
+    ]
+   ],
+   "dur": 8.25
+  },
+  {
+   "bg": "dark",
+   "head": "HIGH VOLTAGE = LESS LOSS",
+   "visual": {
+    "type": "towers",
+    "tags": [
+     [
+      "HIGH VOLTAGE ↑",
+      [
+       240,
+       80,
+       80
+      ],
+      0.4
+     ],
+     [
+      "LOW CURRENT ↓",
+      [
+       60,
+       130,
+       230
+      ],
+      1.6
+     ],
+     [
+      "LESS POWER LOSS ↓",
+      [
+       30,
+       190,
+       120
+      ],
+      3.5
+     ]
+    ]
+   },
+   "captions": [
+    "**ഉയർന്ന വോൾട്ടേജിൽ** വൈദ്യുതി ദൂരങ്ങളിലേക്ക് എത്തിക്കുമ്പോൾ,",
+    "**വൈദ്യുതി നഷ്ടം** കുറയ്ക്കാൻ ഇത് സഹായിക്കുന്നു."
+   ],
+   "capAt": [
+    0,
+    3.45
+   ],
+   "sfx": [
+    [
+     "hum",
+     0.2,
+     0.3
+    ],
+    [
+     "ding",
+     3.5,
+     0.3
+    ]
+   ],
+   "dur": 6.25
+  },
+  {
+   "bg": "light",
+   "head": "POWER PLANT TO HOME",
+   "visual": {
+    "type": "flow",
+    "items": [
+     {
+      "icon": "🏭",
+      "label": "PLANT",
+      "labelCol": [
+       255,
+       120,
+       60
+      ]
+     },
+     {
+      "icon": "draw:tower",
+      "label": "AC GRID",
+      "labelCol": [
+       230,
+       140,
+       20
+      ]
+     },
+     {
+      "icon": "🏠",
+      "label": "HOME",
+      "labelCol": [
+       30,
+       190,
+       120
+      ]
+     }
+    ]
+   },
+   "captions": [
+    "അതുകൊണ്ടാണ് വീടുകളിലേക്ക് വൈദ്യുതി എത്തിക്കുന്ന സംവിധാനങ്ങളിൽ",
+    "**AC** പ്രധാനമായും ഉപയോഗിക്കുന്നത്."
+   ],
+   "capAt": [
+    0,
+    3.5
+   ],
+   "dur": 5.8
+  },
+  {
+   "bg": "dark",
+   "head": "AC vs DC: RECAP",
+   "visual": {
+    "type": "table",
+    "rows": [
+     [
+      "DIRECTION",
+      "CHANGES",
+      "ONE WAY"
+     ],
+     [
+      "FREQUENCY",
+      "50 Hz",
+      "0 Hz"
+     ],
+     [
+      "SOURCE",
+      "POWER GRID",
+      "BATTERY"
+     ],
+     [
+      "USED FOR",
+      "HOMES",
+      "PHONES"
+     ]
+    ]
+   },
+   "captions": [
+    "**AC** യും **DC** യും തമ്മിലുള്ള ഈ വ്യത്യാസമാണ്",
+    "നമ്മുടെ **ആധുനിക വൈദ്യുത ലോകത്തിന്റെ** അടിസ്ഥാനങ്ങളിലൊന്ന്."
+   ],
+   "capAt": [
+    0,
+    3.35
+   ],
+   "dur": 7.25
+  },
+  {
+   "bg": "dark",
+   "visual": {
+    "type": "outro"
+   },
+   "captions": [
+    "കൂടുതൽ അറിവുകൾക്കായി",
+    "**SRJ EDU APP** പിന്തുടരൂ!"
+   ],
+   "capAt": [
+    0,
+    1.7
+   ],
+   "dur": 10.0
+  }
+ ]
+}

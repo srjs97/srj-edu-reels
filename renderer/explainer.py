@@ -72,7 +72,7 @@ def txt(s, size, color, maxw=980, shadow=False, stroke=0, stroke_col=(0, 0, 0)):
     k = (s, size, tuple(color), maxw, shadow, stroke, tuple(stroke_col))
     if k in _tc:
         return _tc[k]
-    ml = is_ml(s) or ("sym" if any(ch in "≤≥↑↗←→" for ch in s) else False)
+    ml = is_ml(s) or ("sym" if any(ch in "≤≥↑↓↗←→×" for ch in s) else False)
     while True:
         f = fnt(size, ml)
         bb = f.getbbox(s, stroke_width=stroke)
@@ -1427,6 +1427,395 @@ def V_tokamak(fr, v, tl, kind, ent):
 
 VIS.update({"fission": V_fission, "fusion": V_fusion, "both": V_both, "chain": V_chain, "plant": V_plant,
             "sun": V_sun, "pp": V_pp, "tokamak": V_tokamak})
+
+
+# ---------------- electricity diagrams (AC / DC) ----------------
+CU = (215, 125, 60)        # copper
+Q_C = (90, 230, 255)       # moving charge glow
+AC_F = 0.55                # slow-motion AC swing for the eye (real mains: 50 Hz)
+
+
+def _q(fr, x, y, r=13, a=1.0):
+    paste(fr, glow(int(r * 1.5), Q_C, 170), x, y, 1, a)
+    paste(fr, ball(r, (120, 235, 255)), x, y, 1, a)
+
+
+def _battery_img(w, h):
+    k = ("batt", w, h)
+    if k not in _ic:
+        im = Image.new("RGBA", (w + 30, h + 10), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        d.rounded_rectangle((0, 5, w, h + 5), 22, fill=(40, 44, 60, 255), outline=WHITE + (255,), width=6)
+        d.rounded_rectangle((w, h / 2 - 22 + 5, w + 24, h / 2 + 22 + 5), 8, fill=(200, 200, 210, 255))
+        d.rounded_rectangle((12, 17, w * 0.62, h - 7), 14, fill=(60, 200, 110, 255))
+        f = fnt(int(h * 0.45), False)
+        d.text((w * 0.80, h / 2 + 5), "+", font=f, fill=WHITE + (255,), anchor="mm")
+        d.text((w * 0.25, h / 2 + 5), "-", font=f, fill=WHITE + (255,), anchor="mm")
+        _ic[k] = im
+    return _ic[k]
+
+
+def _powerbank_img(size):
+    w, h = int(size * 0.62), size
+    im = Image.new("RGBA", (w + 20, h + 20), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((10, 10, w + 10, h + 10), int(w * 0.18), fill=(55, 60, 85, 255), outline=(230, 232, 245, 255), width=8)
+    d.rounded_rectangle((w / 2 - 34 + 10, 22, w / 2 + 34 + 10, 44), 8, fill=(20, 20, 30, 255))
+    for j in range(4):
+        yy = h * 0.42 + j * h * 0.12 + 10
+        d.ellipse((w / 2 - 13 + 10, yy - 13, w / 2 + 13 + 10, yy + 13), fill=(60, 220, 120, 255) if j else (80, 90, 110, 255))
+    d.polygon([(w / 2 + 18, h * 0.17 + 10), (w / 2 - 8, h * 0.29 + 10), (w / 2 + 12, h * 0.29 + 10), (w / 2, h * 0.38 + 10),
+               (w / 2 + 30, h * 0.25 + 10), (w / 2 + 10, h * 0.25 + 10)], fill=YEL + (255,))
+    return im
+
+
+def _tower_img(h, c=(70, 80, 110)):
+    k = ("tower", h, c)
+    if k not in _ic:
+        w = int(h * 0.56)
+        im = Image.new("RGBA", (w + 20, h + 10), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        cx = w / 2 + 10
+        top, base = 5, h + 5
+        lw = max(4, h // 70)
+        bl, br = cx - w * 0.32, cx + w * 0.32
+        tl_, tr = cx - w * 0.06, cx + w * 0.06
+        d.line((bl, base, tl_, top + h * 0.08), fill=c + (255,), width=lw + 2)
+        d.line((br, base, tr, top + h * 0.08), fill=c + (255,), width=lw + 2)
+        for k2 in range(6):
+            q0, q1 = 0.08 + 0.15 * k2, 0.08 + 0.15 * (k2 + 1)
+            y0, y1 = top + h * q0, top + h * min(q1, 1)
+            xl0 = tl_ + (bl - tl_) * (q0 - 0.08) / 0.92
+            xr0 = tr + (br - tr) * (q0 - 0.08) / 0.92
+            xl1 = tl_ + (bl - tl_) * (min(q1, 1) - 0.08) / 0.92
+            xr1 = tr + (br - tr) * (min(q1, 1) - 0.08) / 0.92
+            d.line((xl0, y0, xr1, y1), fill=c + (255,), width=lw)
+            d.line((xr0, y0, xl1, y1), fill=c + (255,), width=lw)
+            d.line((xl0, y0, xr0, y0), fill=c + (255,), width=lw)
+        for q, half in ((0.12, 0.48), (0.30, 0.40)):
+            y = top + h * q
+            d.line((cx - w * half, y, cx + w * half, y), fill=c + (255,), width=lw + 2)
+            for sx in (-1, 1):
+                d.line((cx + sx * w * half, y, cx + sx * w * half, y + h * 0.05), fill=(200, 205, 225, 255), width=lw)
+        _ic[k] = im
+    return _ic[k]
+
+
+_icon_base = icon
+
+
+def icon(name, size):
+    if name == "draw:powerbank":
+        k = (name, size)
+        if k not in _ic:
+            _ic[k] = _powerbank_img(size)
+        return _ic[k]
+    if name == "draw:battery":
+        return _battery_img(int(size), int(size * 0.5))
+    if name == "draw:tower":
+        return _tower_img(int(size))
+    return _icon_base(name, size)
+
+
+def _wire(fr, x0, x1, y, mode, t, a=1.0, n=11, th=56, kind="dark"):
+    """glass wire with moving charges. mode dc: steady drift one way; ac: swing back and forth."""
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.rounded_rectangle((x0, y - th / 2, x1, y + th / 2), th // 2, fill=(255, 255, 255, int((45 if kind == "dark" else 110) * a)))
+    d.rounded_rectangle((x0, y - th / 2, x1, y + th / 2), th // 2, outline=CU + (int(255 * a),), width=7)
+    d.line((x0 + 30, y - th / 2 + 12, x1 - 30, y - th / 2 + 12), fill=(255, 255, 255, int(90 * a)), width=4)
+    fr.alpha_composite(lay)
+    L = x1 - x0 - 60
+    sp = L / n
+    if mode == "dc":
+        for i in range(n):
+            x = x0 + 30 + ((i * sp + t * 170) % L)
+            _q(fr, x, y, a=a)
+        vel = 1.0
+    else:
+        off = sp * 0.42 * math.sin(2 * math.pi * AC_F * t)
+        for i in range(n):
+            _q(fr, x0 + 30 + sp * (i + 0.5) + off, y, a=a)
+        vel = math.cos(2 * math.pi * AC_F * t)
+    return vel
+
+
+def _dir_arrow(fr, cx, y, vel, c, a=1.0, L=300):
+    if abs(vel) < 0.05 or a < 0.02:
+        return
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    s = 1 if vel > 0 else -1
+    m = abs(vel) ** 0.5
+    _arrow(d, cx - s * L / 2 * m, y, cx + s * L / 2 * m, y, tuple(c) + (int(255 * a),), w=16, head=44)
+    fr.alpha_composite(lay)
+
+
+def _graph(fr, cx, cy, w, h, mode, t, kind, c, a=1.0, label="CURRENT"):
+    """small current-vs-time plot; a dot marks 'now' and matches the wire's motion."""
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    x0, x1 = cx - w / 2, cx + w / 2
+    ic = ink(kind)
+    d.line((x0, cy, x1 + 10, cy), fill=ic + (int(160 * a),), width=4)
+    d.line((x0, cy - h / 2 - 10, x0, cy + h / 2 + 10), fill=ic + (int(160 * a),), width=4)
+    span = 3.6                                   # seconds of history shown
+    pts = []
+    for k in range(121):
+        q = k / 120
+        tt = t - span * (1 - q)
+        val = 0.75 if mode == "dc" else math.cos(2 * math.pi * AC_F * tt)
+        pts.append((x0 + w * q, cy - val * h / 2))
+    d.line(pts, fill=tuple(c) + (int(255 * a),), width=9, joint="curve")
+    fr.alpha_composite(lay)
+    px, py = pts[-1]
+    paste(fr, glow(26, c, 200), px, py, 1, a)
+    paste(fr, ball(16, c), px, py, 1, a)
+    paste(fr, txt("+", 44, ic), x0 - 34, cy - h / 2 + 4, 1, a)
+    paste(fr, txt("-", 48, ic), x0 - 34, cy + h / 2 - 4, 1, a)
+    paste(fr, txt("TIME", 32, ic), x1 - 30, cy + 40, 1, a * 0.8)
+    paste(fr, txt(label, 30, ic), x0 + 80, cy - h / 2 - 34, 1, a * 0.8)
+
+
+def V_wires(fr, v, tl, kind, ent):
+    t = tl + ent
+    rows = v["rows"]
+    for i, r in enumerate(rows):
+        y = r.get("y", 800)
+        e = ease_out((t - 0.2 * i) / 0.45)
+        c = col(r.get("col"), COLA if r["mode"] == "ac" else COLB)
+        x0 = r.get("x0", 230 if r.get("src") else 90)
+        x1 = W - 90
+        if r.get("src") == "battery":
+            paste(fr, _battery_img(150, 82), 140, y, e, rot=90)
+        elif r.get("src") == "plug":
+            paste(fr, icon("🔌", 150), 140, y, e)
+        vel = _wire(fr, x0, x1, y, r["mode"], t, e, n=r.get("n", 9), kind=kind)
+        _dir_arrow(fr, (x0 + x1) / 2, y + r.get("arrowDy", -120), vel, c, e, L=r.get("arrowL", 320))
+        if r.get("name"):
+            paste(fr, txt(r["name"], r.get("nameSize", 92), c, maxw=520, shadow=kind == "dark"), r.get("nameX", 190), y - 120, back((t - 0.2 * i) / 0.4))
+        if r.get("label"):
+            paste(fr, pill(r["label"], c, size=40, padx=22), r.get("labelX", W - 260), y + 110, back((t - 0.3 - 0.2 * i) / 0.4))
+        if r.get("graph"):
+            _graph(fr, W / 2 + 30, y + 330, 760, 240, r["mode"], t, kind, c, clamp((t - 0.5) / 0.4), r.get("graphLabel", "CURRENT"))
+    if v.get("vs"):
+        paste(fr, vs_badge(), W / 2, v.get("vsY", 1000), back((t - 0.3) / 0.4) * (1 + 0.06 * abs(math.sin(tl * 4))), 0.95)
+    if v.get("tag"):
+        paste(fr, pill(v["tag"], col(v.get("tagCol"), ORANGE), size=48), W / 2, v.get("tagY", 1250), back((t - v.get("tagAt", 1.0)) / 0.4))
+
+
+def _sine_pts(x0, w, cy, amp, cycles, q=1.0, N=None):
+    N = N or max(80, int(cycles * 24))
+    pts = []
+    for k in range(int(N * q) + 1):
+        u = k / N
+        pts.append((x0 + w * u, cy - amp * math.sin(2 * math.pi * cycles * u)))
+    return pts
+
+
+def V_wave(fr, v, tl, kind, ent):
+    t = tl + ent
+    cy = v.get("y", 820)
+    x0, w = 110, 860
+    ic = ink(kind)
+    e = ease_out(t / 0.4)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.line((x0 - 20, cy, x0 + w + 30, cy), fill=ic + (int(150 * e),), width=4)
+    if v.get("mode") == "count":
+        amp, cyc = 170, 50
+        drawn = clamp((t - 0.3) / v.get("drawDur", 2.4))
+        d.rounded_rectangle((x0 - 20, cy - amp - 40, x0 + w + 20, cy + amp + 40), 26, outline=ic + (int(90 * e),), width=4)
+        pts = _sine_pts(x0, w, cy, amp, cyc, drawn, N=2400)
+        if len(pts) > 1:
+            d.line(pts, fill=COLA + (255,), width=4)
+        fr.alpha_composite(lay)
+        if len(pts) > 1:
+            paste(fr, glow(30, COLA, 200), pts[-1][0], pts[-1][1])
+        n = int(round(cyc * drawn))
+        paste(fr, txt("0 s", 40, ic), x0, cy + amp + 85, 1, e)
+        paste(fr, txt("1 s", 40, ic), x0 + w, cy + amp + 85, 1, e)
+        lay2 = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        _arrow(ImageDraw.Draw(lay2), x0 + 70, cy + amp + 85, x0 + w - 70, cy + amp + 85, ic + (200,), w=6, head=22)
+        fr.alpha_composite(lay2)
+        paste(fr, txt("ONE SECOND", 36, ic), W / 2, cy + amp + 140, 1, e)
+        paste(fr, pill(f"{n} CYCLES", COLA if n < cyc else GREEN, size=60, padx=36), W / 2, cy - amp - 120,
+              1 + (0.08 * back((t - 0.3 - v.get("drawDur", 2.4)) / 0.3) if n == cyc else 0))
+        return
+    # mode "rev": one big cycle, a dot runs along it and each zero crossing (= reversal) is counted
+    amp, cyc = 230, 1
+    P = v.get("period", 2.4)
+    d.line(_sine_pts(x0, w, cy, amp, cyc), fill=ic + (int(70 * e),), width=10)
+    u = ((t - 0.4) % P) / P if t > 0.4 else 0
+    pos = _sine_pts(x0, w, cy, amp, cyc, min(u, 0.5) * 1.0)
+    if len(pos) > 1:
+        d.line(pos, fill=COLA + (255,), width=12)
+    if u > 0.5:
+        neg = [p for p in _sine_pts(x0, w, cy, amp, cyc, u) if p[0] >= x0 + w / 2 - 1]
+        if len(neg) > 1:
+            d.line(neg, fill=COLB + (255,), width=12)
+    fr.alpha_composite(lay)
+    paste(fr, pill("FORWARD →", COLA, size=38, padx=20), x0 + w * 0.25, cy - amp - 70, e)
+    paste(fr, pill("← BACKWARD", COLB, size=38, padx=20), x0 + w * 0.75, cy + amp + 70, e)
+    cur = _sine_pts(x0, w, cy, amp, cyc, u)[-1]
+    paste(fr, glow(34, YEL, 220), cur[0], cur[1], 1, e)
+    paste(fr, ball(20, YEL), cur[0], cur[1], 1, e)
+    for j, uq in enumerate((0.5, 1.0)):
+        on = u >= uq - 0.01 or (t > 0.4 + P and True)
+        xm = x0 + w * uq
+        sc = back(((t - 0.4) % P - uq * P) / 0.3) if u >= uq - 0.01 else (1.0 if t > 0.4 + P else 0)
+        if on and sc > 0.02:
+            paste(fr, glow(40, ORANGE, 200), xm, cy, sc)
+            paste(fr, pill(str(j + 1), ORANGE, size=46, padx=22), xm, cy, sc)
+    paste(fr, txt("1 CYCLE = 2 REVERSALS", 50, ic, shadow=kind == "dark"), W / 2, cy + amp + 150, 1, clamp((t - 1.6) / 0.4))
+    ea = v.get("eqAt")
+    if ea is not None:
+        paste(fr, pill("50 × 2 = 100", YEL, DARK_INK, size=80, padx=44, pady=20), W / 2, cy - amp - 190,
+              back((t - ea) / 0.45) * (1 + 0.04 * math.sin(t * 5)))
+
+
+def V_home(fr, v, tl, kind, ent):
+    """power pole -> wire carrying AC wave pulses -> house, lights come on."""
+    t = tl + ent
+    gy = v.get("ground", 1200)
+    e = ease_out(t / 0.5)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.rectangle((0, gy, W, gy + 70), fill=(90, 170, 80, 255))
+    d.rectangle((0, gy + 26, W, gy + 70), fill=(120, 90, 60, 255))
+    px, ptop = 190, 600
+    d.rectangle((px - 14, ptop, px + 14, gy), fill=(110, 90, 75, 255))
+    d.rectangle((px - 110, ptop + 30, px + 110, ptop + 50), fill=(110, 90, 75, 255))
+    for sx in (-90, 90):
+        d.ellipse((px + sx - 14, ptop + 8, px + sx + 14, ptop + 36), fill=(230, 230, 240, 255))
+    hx, hy = 760, gy - 170
+    wx0, wy0, wx1, wy1 = px + 90, ptop + 20, hx - 120, hy - 150
+    pts = []
+    for k in range(41):
+        q = k / 40
+        pts.append((wx0 + (wx1 - wx0) * q, wy0 + (wy1 - wy0) * q + 70 * math.sin(math.pi * q)))
+    d.line(pts, fill=(40, 40, 50, 255), width=7)
+    fr.alpha_composite(lay)
+    paste(fr, icon("🏠", 430), hx, hy, back(t / 0.5))
+    # little sine pulses riding on the wire toward the house
+    for j in range(3):
+        q = ((t * 0.45 + j / 3) % 1.0)
+        k = q * 40
+        i0 = int(k)
+        x, y = pts[min(i0, 40)]
+        g = Image.new("RGBA", (120, 80), (0, 0, 0, 0))
+        ImageDraw.Draw(g).line([(10 + 100 * s / 30, 40 - 22 * math.sin(2 * math.pi * 1.5 * s / 30)) for s in range(31)], fill=YEL + (255,), width=7)
+        paste(fr, glow(40, YEL, 120), x, y - 40, 1, e)
+        paste(fr, g, x, y - 40, 1, e * min(1, 4 * q, 4 * (1 - q)))
+    ba = clamp((t - v.get("bulbAt", 1.5)) / 0.4)
+    paste(fr, glow(120, (255, 220, 90), int(190 * ba * (0.85 + 0.15 * math.sin(t * 6)))), hx, hy + 30)
+    paste(fr, icon("💡", 150), hx + 210, hy - 260, back((t - v.get("bulbAt", 1.5)) / 0.4))
+    if v.get("label"):
+        paste(fr, pill(v["label"], col(v.get("labelCol"), COLA), size=50), W / 2, gy + 120, back((t - v.get("labelAt", 0.8)) / 0.4))
+
+
+def V_transformer(fr, v, tl, kind, ent):
+    """iron core with two coils. step up (few -> many turns), then step down after swapAt."""
+    t = tl + ent
+    cx, cy = W / 2, v.get("y", 820)
+    cw, ch, th = 560, 520, 84
+    e = ease_out(t / 0.45)
+    down = t >= v.get("swapAt", 99)
+    sw = clamp((t - v.get("swapAt", 99)) / 0.35)
+    nL, nR = (9, 4) if down else (4, 9)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    x0, y0, x1, y1 = cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2
+    d.rounded_rectangle((x0, y0, x1, y1), 24, fill=(120, 128, 150, int(255 * e)))
+    d.rounded_rectangle((x0 + th, y0 + th, x1 - th, y1 - th), 10, fill=(0, 0, 0, 0))
+    lay2 = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    lay2.paste(lay, (0, 0))
+    hole = Image.new("L", (W, H), 255)
+    ImageDraw.Draw(hole).rounded_rectangle((x0 + th, y0 + th, x1 - th, y1 - th), 10, fill=0)
+    lay = Image.composite(lay2, Image.new("RGBA", (W, H)), hole)
+    d = ImageDraw.Draw(lay)
+    for k in range(1, 6):
+        yy = y0 + ch * k / 6
+        d.line((x0 + 6, yy, x0 + th - 6, yy), fill=(150, 158, 180, int(200 * e)), width=3)
+        d.line((x1 - th + 6, yy, x1 - 6, yy), fill=(150, 158, 180, int(200 * e)), width=3)
+    # magnetic flux dots running round the core, direction flips (AC)
+    per = 2 * (cw - th) + 2 * (ch - th)
+    flux = math.sin(2 * math.pi * AC_F * t)
+    for j in range(14):
+        s = (j / 14 * per + 160 * (-math.cos(2 * math.pi * AC_F * t)) / (2 * math.pi * AC_F)) % per
+        a_, b_ = cw - th, ch - th
+        lx, ty = x0 + th / 2, y0 + th / 2
+        if s < a_:
+            p = (lx + s, ty)
+        elif s < a_ + b_:
+            p = (lx + a_, ty + s - a_)
+        elif s < 2 * a_ + b_:
+            p = (lx + a_ - (s - a_ - b_), ty + b_)
+        else:
+            p = (lx, ty + b_ - (s - 2 * a_ - b_))
+        d.ellipse((p[0] - 7, p[1] - 7, p[0] + 7, p[1] + 7), fill=(140, 220, 255, int(200 * e * (0.4 + 0.6 * abs(flux)))))
+    # coils
+    for side, n in ((0, nL), (1, nR)):
+        lx = x0 + th / 2 if side == 0 else x1 - th / 2
+        span = ch * 0.62
+        for k in range(n):
+            yy = cy - span / 2 + span * (k + 0.5) / n
+            d.ellipse((lx - th / 2 - 26, yy - 16, lx + th / 2 + 26, yy + 16), outline=CU + (int(255 * e),), width=12)
+        lead = lx - th / 2 - 26 if side == 0 else lx + th / 2 + 26
+        out = 40 if side == 0 else W - 40
+        d.line((lead, cy - span / 2 + 6, out, cy - span / 2 + 6), fill=CU + (int(255 * e),), width=8)
+        d.line((lead, cy + span / 2 - 6, out, cy + span / 2 - 6), fill=CU + (int(255 * e),), width=8)
+    fr.alpha_composite(lay)
+    lowc, highc = (60, 190, 120), (240, 80, 80)
+    labL, labR = ("HIGH V", "LOW V") if down else ("LOW V", "HIGH V")
+    cL, cR = (highc, lowc) if down else (lowc, highc)
+    pop = 1 + 0.12 * (1 - sw) * (sw > 0) if down else 1
+    paste(fr, pill(labL, cL, size=40, padx=20), x0 - 20, y0 - 60, back((t - 0.4) / 0.4) * pop)
+    paste(fr, pill(labR, cR, size=40, padx=20), x1 + 20, y0 - 60, back((t - 0.6) / 0.4) * pop)
+    tag = "STEP DOWN ↓" if down else "STEP UP ↑"
+    paste(fr, pill(tag, cR if not down else lowc, size=58, padx=34), cx, y1 + 110,
+          back((t - (v.get("swapAt", 99) if down else 0.9)) / 0.4))
+    paste(fr, pill("TRANSFORMER", ORANGE, size=40), cx, y0 - 60, back((t - 0.2) / 0.4))
+
+
+def V_towers(fr, v, tl, kind, ent):
+    """high-voltage line on lattice towers, energy pulses travel along it; tags HIGH V / LOW I / LESS LOSS."""
+    t = tl + ent
+    gy = v.get("ground", 1200)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.rectangle((0, gy, W, gy + 80), fill=(60, 120, 70, 255) if kind == "dark" else (90, 170, 80, 255))
+    fr.alpha_composite(lay)
+    xs, hs = [140, 540, 940], [380, 470, 380]
+    tops = []
+    for i, (x, h) in enumerate(zip(xs, hs)):
+        e = back((t - 0.15 * i) / 0.45)
+        im = _tower_img(h, (205, 210, 230) if kind == "dark" else (80, 90, 120))
+        paste(fr, im, x, gy - h / 2 * e - 4 + h / 2 * (1 - e), 1, clamp(e))
+        tops.append((x, gy - h + h * 0.12))
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    wires = []
+    for side in (-1, 1):
+        for i in range(2):
+            (xa, ya), (xb, yb) = tops[i], tops[i + 1]
+            wa = xa + side * (hs[i] * 0.56 * 0.48)
+            wb = xb + side * (hs[i + 1] * 0.56 * 0.48)
+            pts = [(wa + (wb - wa) * q / 30, ya + (yb - ya) * q / 30 + 70 * math.sin(math.pi * q / 30) + hs[i] * 0.05) for q in range(31)]
+            d.line(pts, fill=(30, 30, 40, 230) if kind != "dark" else (220, 220, 240, 230), width=5)
+            wires.append(pts)
+    fr.alpha_composite(lay)
+    for k, pts in enumerate(wires):
+        q = (t * 0.6 + k * 0.23) % 1.0
+        x, y = pts[int(q * 30)]
+        paste(fr, glow(30, YEL, 210), x, y, 1, clamp(t / 0.6))
+    tags = v.get("tags", [])
+    for j, (s, c, at) in enumerate(tags):
+        paste(fr, pill(s, tuple(c), size=46, padx=28), W / 2, v.get("tagY", 450) + j * 108,
+              back((t - at) / 0.4))
+
+
+VIS.update({"wires": V_wires, "wave": V_wave, "home": V_home, "transformer": V_transformer, "towers": V_towers})
 
 
 # ---------------- confetti ----------------
