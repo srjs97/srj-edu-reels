@@ -17,7 +17,9 @@ def main():
         return
     with tempfile.TemporaryDirectory() as td:
         silent, wav = os.path.join(td, "v.mp4"), os.path.join(td, "a.wav")
-        sound.mix(topic.DURATION, topic.sfx(), getattr(topic, "WOW_AT", None),
+        from maths import template
+        events = template.sfx(topic) if hasattr(topic, "scene") else topic.sfx()
+        sound.mix(topic.DURATION, events, getattr(topic, "WOW_AT", None),
                   getattr(topic, "MUSIC_SEED", 0), wav)
         engine.render(topic, silent)
         subprocess.run([

@@ -251,9 +251,15 @@ class Reel:
 
 def render(topic, out_path, preview_times=None):
     r = Reel()
+    if hasattr(topic, "scene"):  # locked template (all new topics)
+        from maths import template
+        template.check(topic)
+        draw = lambda rr, tt: template.frame(rr, topic, tt)
+    else:  # legacy topic 1 (odd_squares) drew its own frame
+        draw = topic.draw
     if preview_times:  # write PNG stills instead of video
         for tt in preview_times:
-            topic.draw(r, tt); r.bloom()
+            draw(r, tt); r.bloom()
             r.surf.write_to_png(f"{out_path}_{tt:05.1f}.png")
         return
     n = int(round(topic.DURATION * FPS))
@@ -264,7 +270,7 @@ def render(topic, out_path, preview_times=None):
         stdin=subprocess.PIPE)
     for i in range(n):
         t = i / FPS
-        topic.draw(r, t)
+        draw(r, t)
         r.bloom()
         r.surf.flush()
         ff.stdin.write(bytes(r.surf.get_data()))
