@@ -265,5 +265,5 @@ So the first n odd numbers always add up to n².
 🧠 Your turn: what do 2 + 4 + 6 + 8 + … build? Comment below 👇
 
 📌 Save this for your next maths exam
-🔔 Follow @srj_edu_app for 2 new maths visuals every day"""
+🔔 Follow @srj_edu_app for a new maths visual every night"""
 HASHTAGS = "#maths #math #mathematics #mathtricks #visualmath #oddnumbers #squarenumbers #mathproof #learnmaths #srjedu #keralastudents #psc #education #reels"
