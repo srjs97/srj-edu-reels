@@ -20,6 +20,10 @@ have no topic yet. If both are there, just do step 7 for any slot still marked `
 ## 3. Pick the topics (no repeats)
 The two topics are the first two entries in `maths/topics.json` whose `status` is empty, in order:
 1st -> 07:00, 2nd -> 19:00. Never reuse a topic whose status is set.
+No repeated content (Suraj, 2026-11-28): before picking, also check `maths/topics/` and `reels/` so no idea,
+fact or main visual that was already made comes back under another name. The two reels of one day must be from
+different areas (e.g. one geometry/visual proof, one numbers/probability/pattern), so if the next two empty
+topics are too similar, take the next suitable one instead. Hooks, captions and the wow visual must be new each time.
 If fewer than 8 empty topics remain, append 14 new, correct, visual topics to the list (same fields), so the
 queue never runs dry. Never add a topic that is already in the list under another name.
 
