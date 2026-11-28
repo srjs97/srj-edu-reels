@@ -1,5 +1,5 @@
 {
- "rules": "Two topics per day (07:00, 19:00 IST), never reused. status: '' = not yet made, 'rendered YYYY-MM-DD HH:MM' = video pushed, 'scheduled YYYY-MM-DD HH:MM (...)' or 'posted ...' = used.",
+ "rules": "One topic per day (21:00 IST), never reused. status: '' = not yet made, 'rendered YYYY-MM-DD HH:MM' = video pushed, 'scheduled YYYY-MM-DD HH:MM (...)' or 'posted ...' = used.",
  "topics": [
   {
    "n": 1,
